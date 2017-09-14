@@ -122,7 +122,7 @@ if __name__=="__main__":
 
         cmdBatch="bsub -M 2000000 -R \"rusage[pool=2000]\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
         batchid=-1
-        #job,batchid=SubmitToBatch(cmdBatch,10)
-        #nbjobsSub+=job
+        job,batchid=SubmitToBatch(cmdBatch,10)
+        nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
