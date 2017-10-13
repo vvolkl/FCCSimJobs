@@ -1,13 +1,36 @@
 
-#python send.py -n 100 -e 10 -q 1nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_combinedCalo_pythia_diffCellDigitisation.py -c PythiaCards/pythia_pp_DrellYann.cmd -o /eos/experiment/fcc/users/h/helsens/Calosim/BarrelCalo/Field/DrellYann/
-#python send.py -n 100 -e 10 -q 1nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_combinedCalo_pythia_diffCellDigitisation_noField.py -c PythiaCards/pythia_pp_DrellYann.cmd -o /eos/experiment/fcc/users/h/helsens/Calosim/BarrelCalo/NoField/DrellYann/
+#python send.py -n 100 -e 10 -q 1nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_combinedCalo_pythia_diffCellDigitisation.py -c $PDW/PythiaCards/pythia_pp_DrellYann.cmd -o /eos/experiment/fcc/users/h/helsens/Calosim/BarrelCalo/Field/DrellYann/
+
+#python send.py -n 100 -e 10 -q 1nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c PythiaCards/pythia_pp_DrellYann.cmd -o /eos/experiment/fcc/users/h/helsens/Calosim/BarrelCalo/NoField/DrellYann/
+
+#for MB simulation
+#python send.py -n 100 -e 500 -q 1nd -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calohits.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_MinBias.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/minbias/
+
+#For MB mixing
+#python send.py -n 100 -e 100 -q 8nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells_pileup.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_ee_Znunu.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/100PU/
+
+#For jets
+#python send.py -n 100 -e 100 -q 8nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_LHE.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/diJets/20GeV/ -p -j 20
+
+#############################
+#For Higgs
+#python send.py -n 10 -e 50 -q 1nd -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_LHE_Hbb.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/diH/500GeV/SIMU/ -p -j 500 -P H
+
+#For Z bosons
+#python send.py -n 10 -e 50 -q 1nd -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_LHE_Zqq.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/diZ/500GeV/SIMU/ -p -j 500 -P Z
+
+#For W bosons
+#python send.py -n 10 -e 50 -q 1nd -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_LHE_Wqq.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/diW/500GeV/SIMU/ -p -j 500 -P W
+
+#For top 
+#python send.py -n 10 -e 50 -q 1nd -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_trackerhits_calocells.py -c /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/PythiaCards/pythia_pp_LHE_Wqq.cmd -o /eos/experiment/fcc/hh/simulation/samples/tracker_calobarrel/ditop/500GeV/SIMU/ -p -j 500 -P top
+
 
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
 import random
-import datetime
-
+from datetime import datetime
 
 #__________________________________________________________
 def getCommandOutput(command):
@@ -46,10 +69,7 @@ def SubmitToBatch(cmd,nbtrials):
 if __name__=="__main__":
     Dir = os.getcwd()
     
-    ts = time.time()
-    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
     user=os.environ['USER']
-    uniqueID='%s_%s'%(user,st)
 
     from optparse import OptionParser
     parser = OptionParser()
@@ -78,6 +98,16 @@ if __name__=="__main__":
                        dest='outputeos',
                        default='')
 
+    parser.add_option ('-p', '--produceLHE',  help='produceLHE flag',
+                       dest='produceLHE',action='store_true')
+
+    parser.add_option ('-j', '--jetpt',  help='jet pt',
+                       dest='pt',default='20')
+
+    parser.add_option ('-P', '--process',  help='physics process: ljets top W Z H',
+                       dest='process',
+                       default='ljets')
+
 
     (options, args) = parser.parse_args()
     njobs      = int(options.njobs)
@@ -86,10 +116,16 @@ if __name__=="__main__":
     queue      = options.queue
     card       = options.card
     outputeos  = options.outputeos
+    produceLHE = options.produceLHE
+    process    = options.process
+    pt         = int(options.pt)
     rundir = os.getcwd()
     nbjobsSub=0
 
     for i in xrange(njobs):
+        seed = int(datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3])
+        uniqueID='%s_%i'%(user,seed)
+        
         logdir=Dir+"/BatchOutputs/"
         os.system("mkdir -p %s"%logdir)
         cardname=card.split('/')[-1]
@@ -115,12 +151,38 @@ if __name__=="__main__":
         frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/\n')
         frun.write('source ./init.sh\n')
         frun.write('export EOS_MGM_URL=\"root://eospublic.cern.ch\"\n')
-        frun.write('./run fccrun.py  %s  --outputfile=$JOBDIR/%s --nevents=%i --inputfile=%s\n'%(script, outfile ,events, card))
-        frun.write('python Convert.py $JOBDIR/%s $JOBDIR/%s\n'%(outfile,outfileconv))
-        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outputeos))
-        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfileconv,outputeos))
 
-        cmdBatch="bsub -M 2000000 -R \"rusage[pool=2000]\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
+        if produceLHE:
+            frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Generators/FlatGunLHEventProducer\n')
+
+            if process=='ljets':
+                frun.write('python flatGunLHEventProducer.py   --pdg 1 2 3   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            elif process=='bjets':
+                frun.write('python flatGunLHEventProducer.py   --pdg 5   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            elif process=='top':
+                frun.write('python flatGunLHEventProducer.py   --pdg 6   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            elif process=='Z':
+                frun.write('python flatGunLHEventProducer.py   --pdg 23   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            elif process=='W':
+                frun.write('python flatGunLHEventProducer.py   --pdg 24   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            elif process=='H':
+                frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
+            else:
+                print 'process does not exists, exit'
+                sys.esit(3)
+            frun.write('gunzip $JOBDIR/events.lhe.gz\n')
+            frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
+            frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
+            frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/\n')
+            frun.write('./run fccrun.py  %s  --outputfile=$JOBDIR/%s --nevents=%i --inputfile=$JOBDIR/card.cmd\n'%(script, outfile ,events))
+
+        else:
+            frun.write('./run fccrun.py  %s  --outputfile=$JOBDIR/%s --nevents=%i --inputfile=%s\n'%(script, outfile ,events, card))
+
+        frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/\n')
+        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outputeos))
+
+        cmdBatch="bsub -M 4000000 -R \"rusage[pool=2000]\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
         batchid=-1
         job,batchid=SubmitToBatch(cmdBatch,10)
         nbjobsSub+=job
