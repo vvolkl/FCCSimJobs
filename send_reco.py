@@ -110,7 +110,7 @@ if __name__=="__main__":
         frun.write('export JOBDIR=$PWD\n')
         frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/\n')
         frun.write('source ./init.sh\n')
-        frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCGunLHE/\n')
+        frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/\n')
         frun.write('export EOS_MGM_URL=\"root://eospublic.cern.ch\"\n')
         frun.write('python eoscopy.py %s $JOBDIR/%s\n'%(All_files[i],infile))
         frun.write('python Convert.py $JOBDIR/%s $JOBDIR/%s\n'%(infile,infile.replace('.root','.root_out')))
