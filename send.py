@@ -169,7 +169,7 @@ if __name__=="__main__":
                 frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.4   --etamax 1.4  --seed %i   --output $JOBDIR/events.lhe\n'%(events,pt,pt,seed))
             else:
                 print 'process does not exists, exit'
-                sys.esit(3)
+                sys.exit(3)
             frun.write('gunzip $JOBDIR/events.lhe.gz\n')
             frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
             frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
@@ -182,7 +182,7 @@ if __name__=="__main__":
         frun.write('cd /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/FCCSimJobs/\n')
         frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outputeos))
 
-        cmdBatch="bsub -M 4000000 -R \"rusage[pool=2000]\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
+        cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
         batchid=-1
         job,batchid=SubmitToBatch(cmdBatch,10)
         nbjobsSub+=job

@@ -16,7 +16,7 @@ if __name__=="__main__":
     outfile=sys.argv[2]
     nbtrials=10
     cmd = 'cp %s %s'%(infile,outfile)
-
+    submissionStatus=0
     for i in range(nbtrials):            
         outputCMD = getCommandOutput(cmd)
         stderr=outputCMD["stderr"].split('\n')

@@ -12,6 +12,7 @@ import commands
 import time
 import random
 from datetime import datetime
+import ROOT as r
 
 #__________________________________________________________
 def getCommandOutput(command):
@@ -101,6 +102,20 @@ if __name__=="__main__":
             time.sleep(10)
             frun = open(logdir+'/'+frunname, 'w')
 
+        import os.path
+        if os.path.isfile(All_files[i].replace('SIMU','NTUP')):
+            tf1=r.TFile.Open(All_files[i].replace('SIMU','NTUP'))
+            tt1=tf1.Get('ana/hgc')
+            n1=tt1.GetEntries()
+
+            if os.path.isfile(All_files[i]):
+                tf2=r.TFile.Open(All_files[i])
+                tt2=tf2.Get('events')
+
+                n2=tt2.GetEntries()
+                if n1==n2: 
+                    print "file %s with %i entries already exists, continue"%(All_files[i],n1)
+                    continue
 
         commands.getstatusoutput('chmod 777 %s/%s'%(logdir,frunname))
         frun.write('#!/bin/bash\n')
