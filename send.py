@@ -54,7 +54,7 @@ if __name__=="__main__":
     simparser.add_argument('-n','--numEvents', type=int, help='Number of simulation events per job', required=True)
     simparser.add_argument('-N','--numJobs', type=int, default = 10, help='Number of jobs to submit')
     simparser.add_argument('--jobOptions', type=str, default = 'config/geantSim.py', help='Name of the job options run by FCCSW (default config/geantSim.py')
-    simparser.add_argument('-o','--output', type=str, help='NamePath of the output on EOS', required=True)
+    simparser.add_argument('-o','--output', type=str, help='Path of the output on EOS', required=True)
 
     genTypeGroup = simparser.add_mutually_exclusive_group(required = True) # Type of events to generate
     genTypeGroup.add_argument("--singlePart", action='store_true', help="Single particle events")
@@ -70,15 +70,12 @@ if __name__=="__main__":
     singlePartGroup.add_argument('--phiMax', type=float, default=2*pi, help='Maximal azimuthal angle')
     singlePartGroup.add_argument('--particle', type=int,  required = True, help='Particle type (PDG)')
 
-    pythiaGroup = simparser.add_argument_group('Pythia','Common for min bias and LHE')
-    pythiaGroup.add_argument('-c', '--card', type=str, default='PythiaCards/default.cmd', help='Path to Pythia card (default: PythiaCards/default.cmd)')
-
     lheGroup = simparser.add_argument_group('LHE','Additional for generation with LHE')
     lheGroup.add_argument('--process', type=str, help='Event type [Zee, Haa, Hbb, Wqq, Zqq, t, ljet]')
     lheGroup.add_argument('--pt', type=int, help='Transverse momentum of simulated jets')
     simargs, _ = simparser.parse_known_args()
 
-    batchGroup = simparser.add_mutually_exclusive_group(required = True) # Wher to submit jobs
+    batchGroup = simparser.add_mutually_exclusive_group(required = True) # Where to submit jobs
     batchGroup.add_argument("--lsf", action='store_true', help="Submit with LSF")
     batchGroup.add_argument("--condor", action='store_true', help="Submit with condor")
 
@@ -127,19 +124,15 @@ if __name__=="__main__":
         else:
             print "phi: from ", phiMin, " to ", phiMax
     elif simargs.minBias:
-        card = simargs.card
         print "=================================="
         print "==           MIN BIAS          ==="
         print "=================================="
-        print "card = ", card
     elif simargs.LHE:
-        card = simargs.card
         lhe_type = simargs.process
         pt = simargs.pt
         print "=================================="
         print "==             LHE             ==="
         print "=================================="
-        print "card: ", card
         print "LHE type: ", lhe_type
         print "jet pt: ", pt
         print "=================================="
