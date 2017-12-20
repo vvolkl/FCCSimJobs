@@ -24,9 +24,4 @@ Beams:idA = 2212                   ! first beam, p = 2212, pbar = -2212
 Beams:idB = 2212                   ! second beam, p = 2212, pbar = -2212
 Beams:eCM = 100000.                ! CM energy of collision
 
-WeakZ0:gmZmode = 2
-WeakSingleBoson:ffbar2gmZ = on
-23:onMode = off
-23:onIfAny = 11
-PartonLevel:MPI = on            
-
+SoftQCD:nonDiffractive = on

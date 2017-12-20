@@ -20,6 +20,10 @@ ParticleDecays:zMax = 30000        ! mm, (full extent of beampipe)
 ####################
 ######SPECIFIC######
 ####################
+Beams:idA = 2212                   ! first beam, p = 2212, pbar = -2212
+Beams:idB = 2212                   ! second beam, p = 2212, pbar = -2212
+Beams:eCM = 100000.                ! CM energy of collision
+
 HiggsSM:gg2H = on
 25:onMode = off
 25:onIfAny = 23
