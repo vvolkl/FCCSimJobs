@@ -2,6 +2,12 @@ import sys
 import math
 import ROOT as r
 
+def benchmarkCorr(x,y,ecal, ecal_last, ehad, ehad_first):
+    a=1.0716
+    b=0.638
+    c=-0.0000174
+    ebench = ecal*a + ehad + b * math.sqrt(math.fabs(a*ecal_last*ehad_first)) + c(*ecal*a)**2
+
 def layerID(x,y):
     R=math.sqrt(x**2+y**2)
     if   R<1950: return 1
