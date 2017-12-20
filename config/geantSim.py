@@ -51,12 +51,11 @@ if simargs.singlePart:
     phiMin = simargs.phiMin
     phiMax = simargs.phiMax
     pdg = simargs.particle
-    particle_human_names = {11: 'electron', -11: 'positron', -13: 'mup', 13: 'mum', 22: 'photon', 111: 'pi0', 211: 'pip', -211: 'pim'}
     particle_geant_names = {11: 'e-', -11: 'e+', -13: 'mu+', 13: 'mu-', 22: 'gamma', 111: 'pi0', 211: 'pi+', -211: 'pi-' }
     print "=================================="
     print "==       SINGLE PARTICLES      ==="
     print "=================================="
-    print "particle PDG, name: ", pdg, " ", particle_human_names[pdg], " ", particle_geant_names[pdg]
+    print "particle PDG, name: ", pdg, " ", particle_geant_names[pdg]
     print "energy: ", energy, "GeV"
     if etaMin == etaMax:
         print "eta: ", etaMin
@@ -88,15 +87,33 @@ if simargs.geoFull:
     detectors_to_use += ['file:Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
                          'file:Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
                          'file:Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml' ]
-print detectors_to_use
 
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use, OutputLevel = WARNING)
 
+# ECAL readouts
+ecalBarrelReadoutName = "ECalBarrelEta"
+ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
+ecalEndcapReadoutName = "EMECPhiEta"
+ecalFwdReadoutName = "EMFwdPhiEta"
+# HCAL readouts
+hcalBarrelReadoutName = "BarHCal_Readout"
+hcalBarrelReadoutNamePhiEta = hcalBarrelReadoutName + "_phieta"
+hcalExtBarrelReadoutName = "ExtBarHCal_Readout"
+hcalExtBarrelReadoutNamePhiEta = hcalExtBarrelReadoutName + "_phieta"
+hcalEndcapReadoutName = "HECPhiEta"
+hcalFwdReadoutName = "HFwdPhiEta"
+# layers to be merged in endcaps & forward calo
+ecalEndcapNumberOfLayersToMerge = [26]*5+[27]
+ecalFwdNumberOfLayersToMerge = [7]*5+[8]
+hcalEndcapNumberOfLayersToMerge = [13]+[14]*5
+hcalFwdNumberOfLayersToMerge = [8]+[9]*5
+identifierName = "layer"
+volumeName = "layer"
 ##############################################################################################################
 #######                                        SIMULATION                                        #############
 ##############################################################################################################
-#Setting random seed, will be propagated to Geant
+# Setting random seed, will be propagated to Geant
 from Configurables import  RndmGenSvc
 from GaudiSvc.GaudiSvcConf import HepRndm__Engine_CLHEP__RanluxEngine_
 randomEngine = eval('HepRndm__Engine_CLHEP__RanluxEngine_')
@@ -109,31 +126,31 @@ geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist=
 geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
 
 from Configurables import SimG4Alg, SimG4SaveCalHits, SimG4SingleParticleGeneratorTool
-saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = ["ECalBarrelEta"])
+saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = [ecalBarrelReadoutName])
 saveecaltool.positionedCaloHits.Path = "ECalBarrelPositionedHits"
 saveecaltool.caloHits.Path = "ECalBarrelHits"
-savehcaltool = SimG4SaveCalHits("saveHCalHits",readoutNames = ["BarHCal_Readout"])
-savehcaltool.positionedCaloHits.Path = "HCalPositionedHits"
-savehcaltool.caloHits.Path = "HCalHits"
-outputHitsTools = ["SimG4SaveCalHits/saveECalBarrelHits", "SimG4SaveCalHits/saveHCalHits", ]
+savehcaltool = SimG4SaveCalHits("saveHCalBarrelHits",readoutNames = [hcalBarrelReadoutName])
+savehcaltool.positionedCaloHits.Path = "HCalBarrelPositionedHits"
+savehcaltool.caloHits.Path = "HCalBarrelHits"
+outputHitsTools = ["SimG4SaveCalHits/saveECalBarrelHits", "SimG4SaveCalHits/saveHCalBarrelHits"]
 if simargs.geoFull:
-    saveexthcaltool = SimG4SaveCalHits("saveExtHCalHits",readoutNames = ["ExtBarHCal_Readout"])
-    saveexthcaltool.positionedCaloHits.Path = "ExtHCalPositionedHits"
-    saveexthcaltool.caloHits.Path = "ExtHCalHits"
-    savecalendcaptool = SimG4SaveCalHits("saveECalEndcapHits", readoutNames = ["EMECPhiEta"])
+    saveexthcaltool = SimG4SaveCalHits("saveHCalExtBarrelHits",readoutNames = [hcalExtBarrelReadoutName])
+    saveexthcaltool.positionedCaloHits.Path = "HCalExtBarrelPositionedHits"
+    saveexthcaltool.caloHits.Path = "HCalExtBarrelHits"
+    savecalendcaptool = SimG4SaveCalHits("saveECalEndcapHits", readoutNames = [ecalEndcapReadoutName])
     savecalendcaptool.positionedCaloHits.Path = "ECalEndcapPositionedHits"
     savecalendcaptool.caloHits.Path = "ECalEndcapHits"
-    savecalfwdtool = SimG4SaveCalHits("saveECalFwdHits", readoutNames = ["EMFwdPhiEta"])
+    savecalfwdtool = SimG4SaveCalHits("saveECalFwdHits", readoutNames = [ecalFwdReadoutName])
     savecalfwdtool.positionedCaloHits.Path = "ECalFwdPositionedHits"
     savecalfwdtool.caloHits.Path = "ECalFwdHits"
-    savehcalendcaptool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = ["HECPhiEta"])
+    savehcalendcaptool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = [hcalEndcapReadoutName])
     savehcalendcaptool.positionedCaloHits.Path = "HCalEndcapPositionedHits"
     savehcalendcaptool.caloHits.Path = "HCalEndcapHits"
-    savehcalfwdtool = SimG4SaveCalHits("saveHCalFwdHits", readoutNames = ["HFwdPhiEta"])
+    savehcalfwdtool = SimG4SaveCalHits("saveHCalFwdHits", readoutNames = [hcalFwdReadoutName])
     savehcalfwdtool.positionedCaloHits.Path = "HCalFwdPositionedHits"
     savehcalfwdtool.caloHits.Path = "HCalFwdHits"
     outputHitsTools += ["SimG4SaveCalHits/saveECalEndcapHits","SimG4SaveCalHits/saveECalFwdHits",
-                       "SimG4SaveCalHits/saveExtHCalHits", "SimG4SaveCalHits/saveHCalEndcapHits",
+                       "SimG4SaveCalHits/saveHCalExtBarrelHits", "SimG4SaveCalHits/saveHCalEndcapHits",
                        "SimG4SaveCalHits/saveHCalFwdHits"]
 
 geantsim = SimG4Alg("SimG4Alg", outputs = outputHitsTools)
@@ -170,34 +187,14 @@ else:
 #######                                       DIGITISATION                                       #############
 ##############################################################################################################
 
-# ECAL readouts
-ecalBarrelReadoutName = "ECalBarrelEta"
-ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEta"
-ecalFwdReadoutName = "EMFwdPhiEta"
-# HCAL readouts
-hcalReadoutName = "BarHCal_Readout"
-newHcalReadoutName = hcalReadoutName + "_phieta"
-extHcalReadoutName = "ExtBarHCal_Readout"
-newExtHcalReadoutName = extHcalReadoutName + "_phieta"
-hcalEndcapReadoutName = "HECPhiEta"
-hcalFwdReadoutName = "HFwdPhiEta"
-# layers to be merged in endcaps & forward calo
-ecalEndcapNumberOfLayersToMerge = [26]*5+[27]
-ecalFwdNumberOfLayersToMerge = [7]*5+[8]
-hcalEndcapNumberOfLayersToMerge = [13]+[14]*5
-hcalFwdNumberOfLayersToMerge = [8]+[9]*5
-identifierName = "layer"
-volumeName = "layer"
-
 # Calibration constants
 from Configurables import CalibrateInLayersTool, CalibrateCaloHitsTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateEcalBarrel",
-                                   # sampling fraction obtained using SamplingFractionInLayers from DetStudies package
-                                   samplingFraction = [0.12125] + [0.14283] + [0.16354] + [0.17662] + [0.18867] + [0.19890] + [0.20637] + [0.20802],
-                                   readoutName = "ECalBarrelEta",
-                                   layerFieldName = "layer")
-calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="34.5")
+                                        # sampling fraction obtained using SamplingFractionInLayers from DetStudies package
+                                        samplingFraction = [0.12125] + [0.14283] + [0.16354] + [0.17662] + [0.18867] + [0.19890] + [0.20637] + [0.20802],
+                                        readoutName = ecalBarrelReadoutName,
+                                        layerFieldName = "layer")
+calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66")
 if simargs.geoFull:
     calibEcalEndcap = CalibrateCaloHitsTool("CalibrateECalEndcap", invSamplingFraction="13.89")
     calibEcalFwd = CalibrateCaloHitsTool("CalibrateECalFwd", invSamplingFraction="303.03")
@@ -224,11 +221,11 @@ positionsEcalBarrel.positionedHits.Path = "ECalBarrelPositions"
 # 2.2. assign cells into phi bins
 from Configurables import RedoSegmentation
 resegmentEcalBarrel = RedoSegmentation("ReSegmentationEcalBarrel",
-                             oldReadoutName = 'ECalBarrelEta',
-                             oldSegmentationIds = ['module'],
-                             newReadoutName = 'ECalBarrelPhiEta',
-                             inhits = "ECalBarrelPositions",
-                             outhits = "ECalBarrelCellsStep2")
+                                       oldReadoutName = 'ECalBarrelEta',
+                                       oldSegmentationIds = ['module'],
+                                       newReadoutName = 'ECalBarrelPhiEta',
+                                       inhits = "ECalBarrelPositions",
+                                       outhits = "ECalBarrelCellsStep2")
 # 3. step - merge cells in the same phi bin
 createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
                                         doCellCalibration=False, # already calibrated in step 1
@@ -272,26 +269,26 @@ if simargs.geoFull:
 
 # -> Hcal barrel
 # 1. step - merge hits into cells with the default readout
-createHcalCells = CreateCaloCells("CreateHCaloCells",
-                               doCellCalibration=True,
-                               calibTool=calibHcells,
-                               addCellNoise = False, filterCellNoise = False,
-                               hits="HCalHits",
-                               cells="HCalCells")
+createHcalCells = CreateCaloCells("CreateHCalBarrelCells",
+                                  doCellCalibration=True,
+                                  calibTool=calibHcells,
+                                  addCellNoise = False, filterCellNoise = False,
+                                  hits="HCalBarrelHits",
+                                  cells="HCalBarrelCellsStep1")
 # 2. step - rewrite the cellId using the Phi-Eta segmentation
 # 2.1. get positions from centres of volumes/cells
 positionsHcal = CreateVolumeCaloPositions("positionsHcal")
-positionsHcal.hits.Path = "HCalCells"
-positionsHcal.positionedHits.Path = "HCalPositions"
+positionsHcal.hits.Path = "HCalBarrelCellsStep1"
+positionsHcal.positionedHits.Path = "HCalBarrelPositions"
 # 2.2. assign cells into phi bins
 from Configurables import RedoSegmentation
-resegmentHcal = RedoSegmentation("ReSegmentationHcal",
-                             oldReadoutName = hcalReadoutName,
-                             oldSegmentationIds = ["eta","phi"],
-                             newReadoutName = newHcalReadoutName,
-                             debugPrint = 10,
-                             inhits = "HCalPositions",
-                             outhits = "newHCalCells")
+resegmentHcal = RedoSegmentation("ReSegmentationHcalBarrel",
+                                 oldReadoutName = hcalBarrelReadoutName,
+                                 oldSegmentationIds = ["eta","phi"],
+                                 newReadoutName = hcalBarrelReadoutNamePhiEta,
+                                 debugPrint = 10,
+                                 inhits = "HCalBarrelPositions",
+                                 outhits = "HCalBarrelCells")
 
 if simargs.geoFull:
     # -> Hcal extended barrel
@@ -300,21 +297,21 @@ if simargs.geoFull:
                                          doCellCalibration=True,
                                          calibTool=calibHcells,
                                          addCellNoise = False, filterCellNoise = False,
-                                         hits="ExtHCalHits",
-                                         cells="ExtHCalCells")
+                                         hits="HCalExtBarrelHits",
+                                         cells="HCalExtBarrelCellsStep1")
     # 2. step - rewrite the cellId using the Phi-Eta segmentation
     # 2.1. get positions from centres of volumes/cells
     positionsExtHcal = CreateVolumeCaloPositions("positionsExtHcal")
-    positionsExtHcal.hits.Path = "ExtHCalCells"
-    positionsExtHcal.positionedHits.Path = "ExtHCalPositions"
+    positionsExtHcal.hits.Path = "HCalExtBarrelCellsStep1"
+    positionsExtHcal.positionedHits.Path = "HCalExtBarrelPositions"
     # 2.2. assign cells into phi bins
-    resegmentExtHcal = RedoSegmentation("ReSegmentationExtHcal",
-                                    oldReadoutName = extHcalReadoutName,
-                                    oldSegmentationIds = ["eta","phi"],
-                                    newReadoutName = newExtHcalReadoutName,
-                                    debugPrint = 10,
-                                        inhits = "ExtHCalPositions",
-                                        outhits = "newExtHCalCells")
+    resegmentExtHcal = RedoSegmentation("ReSegmentationHcalExtBarrel",
+                                        oldReadoutName = hcalExtBarrelReadoutName,
+                                        oldSegmentationIds = ["eta","phi"],
+                                        newReadoutName = hcalExtBarrelReadoutNamePhiEta,
+                                        debugPrint = 10,
+                                        inhits = "HCalExtBarrelPositions",
+                                        outhits = "HCalExtBarrelCells")
 
     # -> Hcal endcaps and forward
     mergelayersHcalEndcap = MergeLayers("MergeLayersHcalEndcap",
@@ -348,7 +345,14 @@ if simargs.geoFull:
 from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc")
 out = PodioOutput("out")
-out.outputCommands = ["drop *", "keep ECalBarrelCells", "keep ECalEndcapCells", "keep ECalFwdCells", "keep newHCalCells", "keep newExtHCalCells", "keep HCalEndcapCells", "keep HCalFwdCells"]
+out.outputCommands = ["drop *",
+                      "keep ECalBarrelCells",
+                      "keep ECalEndcapCells",
+                      "keep ECalFwdCells",
+                      "keep HCalBarrelCells",
+                      "keep HCalExtBarrelCells",
+                      "keep HCalEndcapCells",
+                      "keep HCalFwdCells"]
 out.filename = output_name
 
 #CPU information
@@ -397,7 +401,7 @@ if simargs.geoFull:
                            createHcalEndcapCells,
                            mergelayersHcalFwd,
                            createHcalFwdCells]
-list_of_algorithms += out
+list_of_algorithms += [out]
 
 ApplicationMgr(
     TopAlg = list_of_algorithms,
