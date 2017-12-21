@@ -284,7 +284,7 @@ if __name__=="__main__":
         if simargs.lsf:
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
             batchid=-1
-            #job,batchid=SubmitToLsf(cmdBatch,10)
+            job,batchid=SubmitToLsf(cmdBatch,10)
         else:
             os.system("mkdir -p %s/out"%logdir)
             os.system("mkdir -p %s/log"%logdir)
@@ -315,7 +315,7 @@ if __name__=="__main__":
             cmdBatch="condor_submit %s/%s\n"%(logdir,fsubname)
             print cmdBatch
             batchid=-1
-            # job,batchid=SubmitToCondor(cmdBatch,10)
-        #nbjobsSub+=job
+            job,batchid=SubmitToCondor(cmdBatch,10)
+        nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
