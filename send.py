@@ -18,6 +18,7 @@ def getCommandOutput(command):
 #__________________________________________________________
 def SubmitToLsf(cmd,nbtrials):
     submissionStatus=0
+    cmd=cmd.replace('//','/')
     for i in range(nbtrials):            
         outputCMD = getCommandOutput(cmd)
         stderr=outputCMD["stderr"].split('\n')
@@ -45,6 +46,7 @@ def SubmitToLsf(cmd,nbtrials):
 #__________________________________________________________
 def SubmitToCondor(cmd,nbtrials):
     submissionStatus=0
+    cmd=cmd.replace('//','/')
     for i in xrange(nbtrials):            
         outputCMD = getCommandOutput(cmd)
         stderr=outputCMD["stderr"].split('\n')
@@ -250,6 +252,7 @@ if __name__=="__main__":
         print common_fccsw_command
         print '-------------------------------------'
         if simargs.physics:
+            frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
             if LHE:
                 frun.write('cd %s\n' %(path_to_LHE))
                 if process=='ljets':
@@ -270,7 +273,6 @@ if __name__=="__main__":
                 frun.write('gunzip $JOBDIR/events.lhe.gz\n')
                 frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
             # run FCCSW using Pythia as generator
-            frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
             frun.write('cd %s\n' %(path_to_FCCSW))
             frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
         else:
@@ -311,10 +313,14 @@ if __name__=="__main__":
             fsub.write('+JobFlavour = "nextweek"\n')
             fsub.write('queue 1')
 
+
             cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)
+            cmdBatch2="condor_submit_dag %s/%s"%(logdir,fsubname)
+
             print cmdBatch
+            print'-------------    ', cmdBatch2
             batchid=-1
-            job,batchid=SubmitToCondor(cmdBatch,10)
+            job,batchid=SubmitToCondor(cmdBatch2,10)
         nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
