@@ -1,7 +1,7 @@
 path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-
+version = 'v01_test'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -196,7 +196,7 @@ if __name__=="__main__":
     nbjobsSub=0
 
     # first make sure the output path for root files exists
-    outdir = output_path + "/v01/" + job_dir + "/simu/"
+    outdir = output_path + "/"+version+"/" + job_dir + "/simu/"
     print "Output will be stored in ... ", outdir
     os.system("mkdir -p %s"%outdir)
     # first make sure the output path exists
