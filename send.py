@@ -281,6 +281,7 @@ if __name__=="__main__":
             frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         frun.write('cd %s\n' %(current_dir))
         frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+        frun.close()
 
         if simargs.lsf:
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
@@ -312,13 +313,10 @@ if __name__=="__main__":
                 fsub.write('RequestCpus = 4\n')
             fsub.write('+JobFlavour = "nextweek"\n')
             fsub.write('queue 1')
-
-
+            fsub.close()
             cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)
-            cmdBatch2="condor_submit_dag %s/%s"%(logdir,fsubname)
 
             print cmdBatch
-            print'-------------    ', cmdBatch2
             batchid=-1
             job,batchid=SubmitToCondor(cmdBatch,10)
         nbjobsSub+=job
