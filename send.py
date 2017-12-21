@@ -320,7 +320,7 @@ if __name__=="__main__":
             print cmdBatch
             print'-------------    ', cmdBatch2
             batchid=-1
-            job,batchid=SubmitToCondor(cmdBatch2,10)
+            job,batchid=SubmitToCondor(cmdBatch,10)
         nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
