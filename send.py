@@ -80,6 +80,7 @@ if __name__=="__main__":
     simparser.add_argument('-N','--numJobs', type=int, default = 10, help='Number of jobs to submit')
     simparser.add_argument('--jobOptions', type=str, default = 'config/geantSim.py', help='Name of the job options run by FCCSW (default config/geantSim.py')
     simparser.add_argument('-o','--output', type=str, help='Path of the output on EOS', required=True)
+    simparser.add_argument('-l','--log', type=str, help='Path of the logs', default = "BatchOutputs/")
 
     genTypeGroup = simparser.add_mutually_exclusive_group(required = True) # Type of events to generate
     genTypeGroup.add_argument("--singlePart", action='store_true', help="Single particle events")
@@ -97,18 +98,14 @@ if __name__=="__main__":
     singlePartGroup.add_argument('--particle', type=int,  required = '--singlePart' in sys.argv, help='Particle type (PDG)')
 
     physicsGroup = simparser.add_argument_group('Physics','Physics process')
-    lhe_physics = ["ljets","t","Wqq","Zqq","Hbb"]
-    SM_physics = ["minBias","Haa","Zee"]
+    lhe_physics = ["ljets","top","Wqq","Zqq","Hbb"]
+    SM_physics = ["MinBias","Haa","Zee", "H4e"]
     physicsGroup.add_argument('--process', type=str, required = '--physics' in sys.argv, help='Process type', choices = lhe_physics + SM_physics)
     physicsGroup.add_argument('--pt', type=int,
                               required = ('ljets' in sys.argv or 'top' in sys.argv or 'Wqq' in sys.argv
                                           or 'Zqq' in sys.argv or 'Hbb' in sys.argv),
                               help='Transverse momentum of simulated jets (valid only for Hbb, Wqq, Zqq, t, ljet)')
     simargs, _ = simparser.parse_known_args()
-    print 'ljets' in sys.argv
-    print 'top' in sys.argv
-    print 'Wqq' in sys.argv
-    print 'Zqq' in sys.argv
 
     batchGroup = simparser.add_mutually_exclusive_group(required = True) # Where to submit jobs
     batchGroup.add_argument("--lsf", action='store_true', help="Submit with LSF")
@@ -189,20 +186,37 @@ if __name__=="__main__":
     rundir = os.getcwd()
     nbjobsSub=0
 
-    # first make sure the output path exists
-    outdir = output_path + "/v01/" + job_dir + "/sim/"
-    print "Output will be stored in ... ", outdir 
+    # first make sure the output path for root files exists
+    outdir = output_path + "/v01/" + job_dir + "/simu/"
+    print "Output will be stored in ... ", outdir
     os.system("mkdir -p %s"%outdir)
-    
+    # first make sure the output path exists
+    current_dir = os.getcwd()
+    logdir = simargs.log if os.path.isabs(simargs.log) else current_dir + '/' +  simargs.log
+    print  "Saving the logs in ... ",logdir
+    os.system("mkdir -p %s/out"%logdir)
+    os.system("mkdir -p %s/log"%logdir)
+    os.system("mkdir -p %s/err"%logdir)
+
+    lhe_dict = {"ljets":"PythiaCards/pythia_pp_LHE.cmd",
+                 "top":"PythiaCards/pythia_pp_LHE.cmd",
+                 "Wqq":"PythiaCards/pythia_pp_LHE.cmd",
+                 "Zqq":"PythiaCards/pythia_pp_LHE.cmd",
+                 "Hbb":"PythiaCards/pythia_pp_LHE.cmd"}
+    # if Pythia used, figure out the Pythia card
+    if simargs.physics:
+        if produceLHE:
+            card = current_dir + "/PythiaCards/pythia_pp_LHE.cmd"
+        else:
+            card = current_dir + "/PythiaCards/pythia_pp_" + process + ".cmd"
+    print card
+    print os.path.isfile(card)
 
     for i in xrange(num_jobs):
         seed = int(datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3])
         uniqueID='%s_%i'%(user,seed)
+        print uniqueID
 
-        
-        # logdir=Dir+"/BatchOutputs/"
-        # os.system("mkdir -p %s"%logdir)
-        # cardname=card.split('/')[-1]
         # frunname = 'job_%s_%s.sh'%(cardname.replace('.cmd',''),uniqueID)
         # outfile = 'output_%s.root'%(uniqueID)
         # outfileconv = outfile.replace('.root','_converted.root')
