@@ -271,6 +271,8 @@ from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc")
 out = PodioOutput("out")
 out.outputCommands = ["drop *",
+                      "keep GenParticles",
+                      "keep GenVertices",
                       "keep ECalBarrelCells",
                       "keep ECalEndcapCells",
                       "keep ECalFwdCells",

@@ -63,11 +63,11 @@ def SubmitToCondor(cmd,nbtrials):
 
             
         if submissionStatus==1:
-            return 1
+            return 1,0
         
         if i==nbtrials-1:
             print "failed sumbmitting after: "+str(nbtrials)+" trials, will exit"
-            return 0
+            return 0,0
 
 
 #__________________________________________________________
@@ -268,10 +268,9 @@ if __name__=="__main__":
                     print 'process does not exists, exit'
                     sys.exit(3)
                 frun.write('gunzip $JOBDIR/events.lhe.gz\n')
-                frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
                 frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
-                frun.write('cd %s\n' %(path_to_FCCSW))
             # run FCCSW using Pythia as generator
+            frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
             frun.write('cd %s\n' %(path_to_FCCSW))
             frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
         else:
@@ -309,10 +308,10 @@ if __name__=="__main__":
                 fsub.write('RequestCpus = 8\n')
             else:
                 fsub.write('RequestCpus = 4\n')
-            fsub.write('+JobFlavour = "testmatch"\n')
-            fsub.write('queue\n')
+            fsub.write('+JobFlavour = "nextweek"\n')
+            fsub.write('queue 1')
 
-            cmdBatch="condor_submit %s/%s\n"%(logdir,fsubname)
+            cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)
             print cmdBatch
             batchid=-1
             job,batchid=SubmitToCondor(cmdBatch,10)
