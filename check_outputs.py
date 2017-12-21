@@ -28,7 +28,7 @@ def jobexits(uid,jobid):
         return False
 
 #__________________________________________________________
-def addfile(uid,nevents,jobid, out):
+def addfile(uid,nevents,jobid, out, status):
         if jobexits(uid,jobid): 
             print 'job already exist ',uid,'   ',jobid
             return
@@ -36,9 +36,9 @@ def addfile(uid,nevents,jobid, out):
         for s in mydict:
             if s==uid: 
                 exist=True
-                mydict[uid].append({'jobid':jobid,'nevents':nevents,'out':out})
+                mydict[uid].append({'jobid':jobid,'nevents':nevents,'out':out,'status':status})
         if not exist:
-            mydict[uid]=[{'jobid':jobid,'nevents':nevents,'out':out}]
+            mydict[uid]=[{'jobid':jobid,'nevents':nevents,'out':out,'status':status}]
         return
 
 
@@ -88,7 +88,7 @@ def checkFile(f, tname):
     except:
         print "Unexpected error:", sys.exc_info()[0]
         print 'file ===%s=== must be deleted'%f
-        os.system('rm %s'%f)
+        #os.system('rm %s'%f)
         return False
 
     tf=r.TFile.Open(f)
@@ -97,7 +97,7 @@ def checkFile(f, tname):
         tt=tf.Get(tname)
         if tt==None:
             print 'file ===%s=== must be deleted'%f
-            os.system('rm %s'%f)
+            #os.system('rm %s'%f)
             return False
 
     except IOError as e:
@@ -107,7 +107,7 @@ def checkFile(f, tname):
     except:
         print "Unexpected error:", sys.exc_info()[0]
         print 'file ===%s=== must be deleted'%f
-        os.system('rm %s'%f)
+        #os.system('rm %s'%f)
         return False
     
 
@@ -116,8 +116,14 @@ def checkFile(f, tname):
         ctrlstr = 'probably not closed'
         for w in was:
             if ctrlstr in str(w.message):
-                os.system('rm %s'%f)
+                #os.system('rm %s'%f)
                 return False
+    
+    f=r.TFile.Open(f)
+    tt=tf.Get(tname)
+    if tt.GetEntries()==0:
+        print 'file has 0 entries ===%s=== must be deleted'%f
+        return False
 
 
     return True
@@ -148,20 +154,22 @@ if __name__=="__main__":
                 jobid=jobid.replace('.root','')
                 if '/simu/' in All_files[i] or  '/SIMU/' in All_files[i]:
                     if not checkFile(All_files[i], 'events'):
+                        addfile(uid,nevents,jobid, All_files[i],'BAD')
                         continue
                     tf=r.TFile.Open(All_files[i])
                     tt=tf.Get('events')
                     nevents=tt.GetEntries()
                     ntot+=nevents
-                    addfile(uid,nevents,jobid, All_files[i])
+                    addfile(uid,nevents,jobid, All_files[i],'DONE')
                 elif '/ntup/' in All_files[i]:
                     if not checkFile(All_files[i], 'ana/hgc'):
+                        addfile(uid,nevents,jobid, All_files[i],'BAD')
                         continue
                     tf=r.TFile.Open(All_files[i])
                     tt=tf.Get('ana/hgc')
                     nevents=tt.GetEntries()
                     ntot+=nevents
-                    addfile(uid,nevents,jobid, All_files[i])
+                    addfile(uid,nevents,jobid, All_files[i],'DONE')
                 else:
                     print 'not correct'
         print ntot
