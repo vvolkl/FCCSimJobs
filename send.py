@@ -182,12 +182,15 @@ if __name__=="__main__":
             LHE = False
             job_dir += "etaFull/"
         print "=================================="
+    thebatch=''
     if simargs.condor:
         print "submitting to condor ..."
+        thebatch='condor'
     elif simargs.lsf:
         print "submitting to lxbatch ..."
         queue = simargs.queue
         print "queue: ", queue
+        thebatch='lsf'
 
     rundir = os.getcwd()
     nbjobsSub=0
@@ -216,7 +219,7 @@ if __name__=="__main__":
         uniqueID='%s_%i'%(user,seed)
         print uniqueID
 
-        outfile = 'output_%s.root'%(uniqueID)
+        outfile = 'output_%s_%s.root'%(thebatch,uniqueID)
         print "Name of the output file: ", outfile
 
         if simargs.physics:
