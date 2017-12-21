@@ -263,21 +263,7 @@ createHcalCells = CreateCaloCells("CreateHCalBarrelCells",
                                   calibTool=calibHcells,
                                   addCellNoise = False, filterCellNoise = False,
                                   hits="HCalBarrelHits",
-                                  cells="HCalBarrelCellsStep1")
-# 2. step - rewrite the cellId using the Phi-Eta segmentation
-# 2.1. get positions from centres of volumes/cells
-positionsHcal = CreateVolumeCaloPositions("positionsHcal")
-positionsHcal.hits.Path = "HCalBarrelCellsStep1"
-positionsHcal.positionedHits.Path = "HCalBarrelPositions"
-# 2.2. assign cells into phi bins
-from Configurables import RedoSegmentation
-resegmentHcal = RedoSegmentation("ReSegmentationHcalBarrel",
-                                 oldReadoutName = hcalBarrelReadoutName,
-                                 oldSegmentationIds = ["eta","phi"],
-                                 newReadoutName = hcalBarrelReadoutNamePhiEta,
-                                 debugPrint = 10,
-                                 inhits = "HCalBarrelPositions",
-                                 outhits = "HCalBarrelCells")
+                                  cells="HCalBarrelCells")
 
 # -> Hcal extended barrel
 # 1. step - merge hits into cells with the default readout
@@ -286,20 +272,7 @@ createExtHcalCells = CreateCaloCells("CreateExtHcalCaloCells",
                                      calibTool=calibHcells,
                                      addCellNoise = False, filterCellNoise = False,
                                      hits="HCalExtBarrelHits",
-                                     cells="HCalExtBarrelCellsStep1")
-# 2. step - rewrite the cellId using the Phi-Eta segmentation
-# 2.1. get positions from centres of volumes/cells
-positionsExtHcal = CreateVolumeCaloPositions("positionsExtHcal")
-positionsExtHcal.hits.Path = "HCalExtBarrelCellsStep1"
-positionsExtHcal.positionedHits.Path = "HCalExtBarrelPositions"
-# 2.2. assign cells into phi bins
-resegmentExtHcal = RedoSegmentation("ReSegmentationHcalExtBarrel",
-                                    oldReadoutName = hcalExtBarrelReadoutName,
-                                    oldSegmentationIds = ["eta","phi"],
-                                    newReadoutName = hcalExtBarrelReadoutNamePhiEta,
-                                    debugPrint = 10,
-                                    inhits = "HCalExtBarrelPositions",
-                                    outhits = "HCalExtBarrelCells")
+                                     cells="HCalExtBarrelCells")
 
 # -> Hcal endcaps and forward
 mergelayersHcalEndcap = MergeLayers("MergeLayersHcalEndcap",
@@ -354,13 +327,7 @@ positionsEcalBarrel.AuditExecute = True
 resegmentEcalBarrel.AuditExecute = True
 createEcalBarrelCells.AuditExecute = True
 createHcalCells.AuditExecute = True
-positionsHcal.AuditExecute = True
-resegmentHcal.AuditExecute = True
 createEcalEndcapCells.AuditExecute = True
-createEcalFwdCells.AuditExecute = True
-createExtHcalCells.AuditExecute = True
-positionsExtHcal.AuditExecute = True
-resegmentExtHcal.AuditExecute = True
 createHcalEndcapCells.AuditExecute = True
 createHcalFwdCells.AuditExecute = True
 out.AuditExecute = True
@@ -371,15 +338,11 @@ list_of_algorithms = [geantsim,
                       resegmentEcalBarrel,
                       createEcalBarrelCells,
                       createHcalCells,
-                      positionsHcal,
-                      resegmentHcal,
                       mergelayersEcalEndcap,
                       createEcalEndcapCells,
                       mergelayersEcalFwd,
                       createEcalFwdCells,
                       createExtHcalCells,
-                      positionsExtHcal,
-                      resegmentExtHcal,
                       mergelayersHcalEndcap,
                       createHcalEndcapCells,
                       mergelayersHcalFwd,
