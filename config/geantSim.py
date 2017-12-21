@@ -102,8 +102,6 @@ ecalEndcapNumberOfLayersToMerge = [26]*5+[27]
 ecalFwdNumberOfLayersToMerge = [7]*5+[8]
 hcalEndcapNumberOfLayersToMerge = [13]+[14]*5
 hcalFwdNumberOfLayersToMerge = [8]+[9]*5
-identifierName = "layer"
-volumeName = "layer"
 ##############################################################################################################
 #######                                        SIMULATION                                        #############
 ##############################################################################################################
@@ -225,39 +223,20 @@ createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
                                         cells="ECalBarrelCells")
 
 # -> Ecal endcaps and forward
-from Configurables import MergeLayers
-mergelayersEcalEndcap = MergeLayers("MergeLayersEcalEndcap",
-                                    # take the bitfield description from the geometry service
-                                        readout = ecalEndcapReadoutName,
-                                    # cells in which field should be merged
-                                        identifier = identifierName,
-                                    volumeName = volumeName,
-                                    # how many cells to merge
-                                        merge = ecalEndcapNumberOfLayersToMerge)
-mergelayersEcalEndcap.inhits.Path = "ECalEndcapHits"
-mergelayersEcalEndcap.outhits.Path = "mergedECalEndcapHits"
 createEcalEndcapCells = CreateCaloCells("EcalEndcapCells",
                                         doCellCalibration=True,
                                         calibTool=calibEcalEndcap,
                                         addCellNoise=False, filterCellNoise=False)
-createEcalEndcapCells.hits.Path="mergedECalEndcapHits"
+createEcalEndcapCells.hits.Path="ECalEndcapHits"
 createEcalEndcapCells.cells.Path="ECalEndcapCells"
-mergelayersEcalFwd = MergeLayers("MergeLayersEcalFwd",
-                                 readout = ecalFwdReadoutName,
-                                 identifier = identifierName,
-                                 volumeName = volumeName,
-                                 merge = ecalFwdNumberOfLayersToMerge)
-mergelayersEcalFwd.inhits.Path = "ECalFwdHits"
-mergelayersEcalFwd.outhits.Path = "mergedECalFwdHits"
 createEcalFwdCells = CreateCaloCells("EcalFwdCells",
                                      doCellCalibration=True,
                                      calibTool=calibEcalFwd,
                                      addCellNoise=False, filterCellNoise=False)
-createEcalFwdCells.hits.Path="mergedECalFwdHits"
+createEcalFwdCells.hits.Path="ECalFwdHits"
 createEcalFwdCells.cells.Path="ECalFwdCells"
 
 # -> Hcal barrel
-# 1. step - merge hits into cells with the default readout
 createHcalCells = CreateCaloCells("CreateHCalBarrelCells",
                                   doCellCalibration=True,
                                   calibTool=calibHcells,
@@ -266,7 +245,6 @@ createHcalCells = CreateCaloCells("CreateHCalBarrelCells",
                                   cells="HCalBarrelCells")
 
 # -> Hcal extended barrel
-# 1. step - merge hits into cells with the default readout
 createExtHcalCells = CreateCaloCells("CreateExtHcalCaloCells",
                                      doCellCalibration=True,
                                      calibTool=calibHcells,
@@ -275,31 +253,17 @@ createExtHcalCells = CreateCaloCells("CreateExtHcalCaloCells",
                                      cells="HCalExtBarrelCells")
 
 # -> Hcal endcaps and forward
-mergelayersHcalEndcap = MergeLayers("MergeLayersHcalEndcap",
-                                    readout = hcalEndcapReadoutName,
-                                    identifier = identifierName,
-                                    volumeName = volumeName,
-                                    merge = hcalEndcapNumberOfLayersToMerge)
-mergelayersHcalEndcap.inhits.Path = "HCalEndcapHits"
-mergelayersHcalEndcap.outhits.Path = "mergedHCalEndcapHits"
 createHcalEndcapCells = CreateCaloCells("CreateHcalEndcapCaloCells",
                                         doCellCalibration=True,
                                         calibTool=calibHcalEndcap,
                                         addCellNoise=False, filterCellNoise=False)
-createHcalEndcapCells.hits.Path="mergedHCalEndcapHits"
+createHcalEndcapCells.hits.Path="HCalEndcapHits"
 createHcalEndcapCells.cells.Path="HCalEndcapCells"
-mergelayersHcalFwd = MergeLayers("MergeLayersHcalFwd",
-                                 readout = hcalFwdReadoutName,
-                                 identifier = identifierName,
-                                 volumeName = volumeName,
-                                 merge = hcalFwdNumberOfLayersToMerge)
-mergelayersHcalFwd.inhits.Path = "HCalFwdHits"
-mergelayersHcalFwd.outhits.Path = "mergedHCalFwdHits"
 createHcalFwdCells = CreateCaloCells("CreateHcalFwdCaloCells",
                                      doCellCalibration=True,
                                      calibTool=calibHcalFwd,
                                      addCellNoise=False, filterCellNoise=False)
-createHcalFwdCells.hits.Path="mergedHCalFwdHits"
+createHcalFwdCells.hits.Path="HCalFwdHits"
 createHcalFwdCells.cells.Path="HCalFwdCells"
 
 # PODIO algorithm
@@ -338,14 +302,10 @@ list_of_algorithms = [geantsim,
                       resegmentEcalBarrel,
                       createEcalBarrelCells,
                       createHcalCells,
-                      mergelayersEcalEndcap,
                       createEcalEndcapCells,
-                      mergelayersEcalFwd,
                       createEcalFwdCells,
                       createExtHcalCells,
-                      mergelayersHcalEndcap,
                       createHcalEndcapCells,
-                      mergelayersHcalFwd,
                       createHcalFwdCells,
                       out]
 
