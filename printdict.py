@@ -24,7 +24,7 @@ ntot_events=0
 ntot_files=0
 ntot_files_bad=0
 indict=None
-indictname='eventsDict.json'
+indictname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01_test.json'
 with open(indictname) as f:
     indict = json.load(f)
 
