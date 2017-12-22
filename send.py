@@ -1,7 +1,7 @@
 path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-version = 'v01_test'
+version = 'v01'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time

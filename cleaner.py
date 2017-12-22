@@ -1,6 +1,6 @@
 import json
 import os
-dicname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01_test.json'
+dicname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
 mydict=None
 with open(dicname) as f:
     mydict = json.load(f)

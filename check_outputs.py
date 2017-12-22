@@ -1,4 +1,4 @@
-#python check_outputs.py /eos/experiment/fcc/hh/simulation/samples/v01_test
+#python check_outputs.py /eos/experiment/fcc/hh/simulation/samples/v01
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -8,7 +8,7 @@ import ROOT as r
 import json
 import warnings
 
-outname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01_test.json'
+outname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
 if not os.path.exists(outname):
     file_handle = open(outname,"w")
     file_handle.write('{}\n')
