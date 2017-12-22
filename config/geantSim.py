@@ -79,6 +79,7 @@ detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_De
                   path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
+                  path_to_detector+'/Detector/DetFCChhTailCatcher/compact/FCChh_TailCatcher.xml',
                   path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
                   path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
 
@@ -97,11 +98,11 @@ hcalExtBarrelReadoutName = "ExtBarHCal_Readout"
 hcalExtBarrelReadoutNamePhiEta = hcalExtBarrelReadoutName + "_phieta"
 hcalEndcapReadoutName = "HECPhiEta"
 hcalFwdReadoutName = "HFwdPhiEta"
-# layers to be merged in endcaps & forward calo
-ecalEndcapNumberOfLayersToMerge = [26]*5+[27]
-ecalFwdNumberOfLayersToMerge = [7]*5+[8]
-hcalEndcapNumberOfLayersToMerge = [13]+[14]*5
-hcalFwdNumberOfLayersToMerge = [8]+[9]*5
+# Tail Catcher readout
+tailCatcherReadoutName = "Muons_Readout"
+# layers to be merged in endcaps
+ecalEndcapNumberOfLayersToMerge = [2] + [2] + [4]*37 + [5]
+hcalEndcapNumberOfLayersToMerge = [2] + [4]*19 + [5]
 ##############################################################################################################
 #######                                        SIMULATION                                        #############
 ##############################################################################################################
@@ -140,9 +141,12 @@ savehcalendcaptool.caloHits.Path = "HCalEndcapHits"
 savehcalfwdtool = SimG4SaveCalHits("saveHCalFwdHits", readoutNames = [hcalFwdReadoutName])
 savehcalfwdtool.positionedCaloHits.Path = "HCalFwdPositionedHits"
 savehcalfwdtool.caloHits.Path = "HCalFwdHits"
+savetailcatchertool = SimG4SaveCalHits("saveTailCatcherHits", readoutNames = [tailCatcherReadoutName])
+savetailcatchertool.positionedCaloHits = "TailCatcherPositionedHits"
+savetailcatchertool.caloHits = "TailCatcherHits"
 outputHitsTools += ["SimG4SaveCalHits/saveECalEndcapHits","SimG4SaveCalHits/saveECalFwdHits",
                     "SimG4SaveCalHits/saveHCalExtBarrelHits", "SimG4SaveCalHits/saveHCalEndcapHits",
-                    "SimG4SaveCalHits/saveHCalFwdHits"]
+                    "SimG4SaveCalHits/saveHCalFwdHits", "SimG4SaveCalHits/saveTailCatcherHits"]
 
 geantsim = SimG4Alg("SimG4Alg", outputs = outputHitsTools)
 
@@ -265,6 +269,12 @@ createHcalFwdCells = CreateCaloCells("CreateHcalFwdCaloCells",
                                      addCellNoise=False, filterCellNoise=False)
 createHcalFwdCells.hits.Path="HCalFwdHits"
 createHcalFwdCells.cells.Path="HCalFwdCells"
+createTailCatcherCells = CreateCaloCells("CreateTailCatcherCells",
+                                         doCellCalibration=False,
+                                         addCellNoise = False, filterCellNoise = False,
+                                         OutputLevel = DEBUG,
+                                         hits="TailCatcherHits",
+                                         cells="TailCatcherCells")
 
 # PODIO algorithm
 from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
@@ -279,7 +289,8 @@ out.outputCommands = ["drop *",
                       "keep HCalBarrelCells",
                       "keep HCalExtBarrelCells",
                       "keep HCalEndcapCells",
-                      "keep HCalFwdCells"]
+                      "keep HCalFwdCells",
+                      "keep TailCatcherCells"]
 out.filename = output_name
 
 #CPU information
@@ -296,6 +307,7 @@ createHcalCells.AuditExecute = True
 createEcalEndcapCells.AuditExecute = True
 createHcalEndcapCells.AuditExecute = True
 createHcalFwdCells.AuditExecute = True
+createTailCatcherCells.AuditExecute = True
 out.AuditExecute = True
 
 list_of_algorithms = [geantsim,
@@ -309,6 +321,7 @@ list_of_algorithms = [geantsim,
                       createExtHcalCells,
                       createHcalEndcapCells,
                       createHcalFwdCells,
+                      createTailCatcherCells,
                       out]
 
 if simargs.pythia:
