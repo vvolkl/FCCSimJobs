@@ -14,9 +14,22 @@ git clone git@github.com:YOURGITUSERNAME/FCCSimJobs.git
 
 []() Sending simulation jobs
 -------------------------
-Various options are available
+Various options are available and are explained below. 
+First if **--singlePart** is used, the following options are possible:
+   - **--particle** for the particle ID. The supported ones are 11(e-), -11(e+), -13(mu-), 13(mu+), 22, 111(pi0), 211(pi+), -211(pi-), 130(K0L). For example to run single anti-muon, use **--particle -13**
+   - 
+Second if **--physics** is used, the following options are possible
+   - 
+   - 
+Third there are common options
+   - the pseudo-rapidity range is changed using **--etaMin** and **--etaMax**, default is 0 for both 
+   - the batch system is either **--lsf**  or **--condor**
+   - the number of events per job is configured through **-n**
+   - and the number of jobs to send is configured through **-N**
+   
 ```
 python send.py --singlePart --particle -211 -e 10 -n 10 -N 1 --condor
+python send.py --physics --process Zqq --pt 1000 -n 10 -N 1 --lsf
 ```
 Also, please often check the afs directory where the jobs where send
 
