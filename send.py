@@ -315,7 +315,7 @@ if __name__=="__main__":
             else:
                 fsub.write('RequestCpus = 4\n')
             fsub.write('+JobFlavour = "nextweek"\n')
-            fsub.write('queue 1')
+            fsub.write('queue 1\n')
             fsub.close()
             cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)
 
