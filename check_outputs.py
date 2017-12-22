@@ -1,3 +1,4 @@
+#python check_outputs.py /eos/experiment/fcc/hh/simulation/samples/v01_test
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -7,14 +8,14 @@ import ROOT as r
 import json
 import warnings
 
-outname='eventsDict.json'
+outname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01_test.json'
 if not os.path.exists(outname):
     file_handle = open(outname,"w")
     file_handle.write('{}\n')
     file_handle.close()
 
 mydict=None
-with open('eventsDict.json') as f:
+with open(outname) as f:
     mydict = json.load(f)
 
 

@@ -4,16 +4,40 @@
 
 If you do not attempt to contribute to the repository, simply clone it:
 ```
-git clone git@github.com:clementhelsens/FCCGunLHE.git
+git clone git@github.com:clementhelsens/FCCSimJobs.git
 ```
 
 If you aim at contributing to the repository, you need to fork and then clone the forked repository:
 ```
-git clone git@github.com:YOURGITUSERNAME/FCCGunLHE.git
+git clone git@github.com:YOURGITUSERNAME/FCCSimJobs.git
 ```
 
 []() Sending simulation jobs
 -------------------------
+Various options are available and are explained below. 
+1. First if **--singlePart** is used, the following options are possible:
+   - **--particle** for the particle ID. The supported ones are 11(e-), -11(e+), -13(mu-), 13(mu+), 22, 111(pi0), 211(pi+), -211(pi-), 130(K0L). For example to run single anti-muon, use **--particle -13**
+   - the angle is changed using **--phiMin** and **--phiMax**, default are 0 and 2pi respectively
+   
+   
+2. Second if **--physics** is used, the following options are possible
+   - **--process** to select the type of process. Two types are available
+      - from LHE events, this will call a gun that will produce 2 back to back objects, the following keys are available **ljets**, **top**, **Wqq**, **Zqq**, **Hbb**. If this option is used, the pt can also be given using **--pt**
+      - from calling pythia8 direcly, thus generating the events at 100TeV, the following keys are available **MinBias**, **Haa**, **Zee**, **H4e**
+      
+      
+3. Third there are common options
+   - the pseudo-rapidity range is changed using **--etaMin** and **--etaMax**, default is 0 for both 
+   - the batch system is either **--lsf**  or **--condor**
+   - the number of events per job is configured through **-n**
+   - and the number of jobs to send is configured through **-N**
+   
 ```
-python send.py -n 100 -e 10 -q 1nh -s /afs/cern.ch/user/h/helsens/FCCsoft/Calo/FCCSW/Reconstruction/RecCalorimeter/tests/options/geant_fullsim_combinedCalo_pythia_diffCellDigitisation.py -c PythiaCards/pythia_pp_DrellYann.cmd -o /eos/experiment/fcc/users/h/helsens/Calosim/BarrelCalo/Field/DrellYann/
+python send.py --singlePart --particle -211 -e 10 -n 10 -N 1 --condor
+python send.py --physics --process Zqq --pt 1000 -n 10 -N 1 --lsf
 ```
+Also, please often check the afs directory where the jobs where send
+
+
+[]() Checking the results
+-------------------------

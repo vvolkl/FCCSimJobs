@@ -248,7 +248,7 @@ if __name__=="__main__":
         frun.write('source %s\n' % (path_to_INIT))
 
         # set options to run FCCSW
-        common_fccsw_command = './run fccrun.py %s --outName $JOBDIR/%s --numEvents %i --seed %i'%(job_options, outfile ,num_events, seed)
+        common_fccsw_command = '%s/run fccrun.py %s --outName $JOBDIR/%s --numEvents %i --seed %i'%(path_to_FCCSW,job_options, outfile ,num_events, seed)
         if not magnetic_field:
             common_fccsw_command += ' --bFieldOff'
         print '-------------------------------------'
@@ -259,24 +259,24 @@ if __name__=="__main__":
             if LHE:
                 frun.write('cd %s\n' %(path_to_LHE))
                 if process=='ljets':
-                    frun.write('python flatGunLHEventProducer.py   --pdg 1 2 3   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                    frun.write('python flatGunLHEventProducer.py   --pdg 1 2 3   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 # elif process=='bjets':
-                #     frun.write('python flatGunLHEventProducer.py   --pdg 5   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                #     frun.write('python flatGunLHEventProducer.py   --pdg 5   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 elif process=='top':
-                    frun.write('python flatGunLHEventProducer.py   --pdg 6   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                    frun.write('python flatGunLHEventProducer.py   --pdg 6   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 elif process=='Zqq':
-                    frun.write('python flatGunLHEventProducer.py   --pdg 23   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                    frun.write('python flatGunLHEventProducer.py   --pdg 23   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 elif process=='Wqq':
-                    frun.write('python flatGunLHEventProducer.py   --pdg 24   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                    frun.write('python flatGunLHEventProducer.py   --pdg 24   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 elif process=='Hbb':
-                    frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin -1.5   --etamax 1.5  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,seed))
+                    frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,etaMin,etaMax,seed))
                 else:
                     print 'process does not exists, exit'
                     sys.exit(3)
                 frun.write('gunzip $JOBDIR/events.lhe.gz\n')
                 frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
             # run FCCSW using Pythia as generator
-            frun.write('cd %s\n' %(path_to_FCCSW))
+            #frun.write('cd %s\n' %(path_to_FCCSW))
             frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
         else:
             # run single particles
