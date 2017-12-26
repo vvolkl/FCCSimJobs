@@ -75,8 +75,16 @@ def SubmitToCondor(cmd,nbtrials):
 #__________________________________________________________
 if __name__=="__main__":
     Dir = os.getcwd()
-    
+    import users as us
+
     user=os.environ['USER']
+    userext=-999999
+    for key, value in us.users.iteritems():
+        if key==user: 
+            userext=value
+    if userext<0:
+        print 'user not known ',user,'   exit (needs to be added to users.py)'
+        sys.exit(3)
 
     import argparse
     simparser = argparse.ArgumentParser()
@@ -214,9 +222,17 @@ if __name__=="__main__":
         print card
         print os.path.isfile(card)
 
+
+    for key, value in us.users.iteritems():
+        if key==user: 
+            userext=value
+    if userext<0:
+        print 'user not known ',user,'   exit'
+        sys.exit(3)
+
     for i in xrange(num_jobs):
         seed = int(datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3])
-        uniqueID='%s_%i'%(user,seed)
+        uniqueID='%s_%i%i'%(user,seed,userid)
         print uniqueID
 
         outfile = 'output_%s_%s.root'%(thebatch,uniqueID)
