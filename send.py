@@ -232,7 +232,8 @@ if __name__=="__main__":
 
     for i in xrange(num_jobs):
         seed = int(datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3])
-        uniqueID='%s_%i%i'%(user,seed,userid)
+        seed = int('%i%i'%(seed,userext))
+        uniqueID='%s_%i'%(user,seed)
         print uniqueID
 
         outfile = 'output_%s_%s.root'%(thebatch,uniqueID)
