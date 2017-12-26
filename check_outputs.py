@@ -31,15 +31,17 @@ def jobexits(uid,jobid):
 #__________________________________________________________
 def addfile(uid,nevents,jobid, out, status):
         if jobexits(uid,jobid): 
-            print 'job already exist ',uid,'   ',jobid
             return
         exist=False
         for s in mydict:
             if s==uid: 
                 exist=True
                 mydict[uid].append({'jobid':jobid,'nevents':nevents,'out':out,'status':status})
+                print 'adding job ',jobid,'  to process  ',uid
         if not exist:
             mydict[uid]=[{'jobid':jobid,'nevents':nevents,'out':out,'status':status}]
+            print 'adding process ',uid,'  and job  ',jobid
+
         return
 
 
@@ -48,33 +50,6 @@ def getCommandOutput(command):
     p = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stdout,stderr = p.communicate()
     return {"stdout":stdout, "stderr":stderr, "returncode":p.returncode}
-
-#__________________________________________________________
-def SubmitToBatch(cmd,nbtrials):
-    submissionStatus=0
-    for i in range(nbtrials):            
-        outputCMD = getCommandOutput(cmd)
-        stderr=outputCMD["stderr"].split('\n')
-
-        for line in stderr :
-            if line=="":
-                print "------------GOOD SUB"
-                submissionStatus=1
-                break
-            else:
-                print "++++++++++++ERROR submitting, will retry"
-                print "error: ",stderr
-                print "Trial : "+str(i)+" / "+str(nbtrials)
-                time.sleep(10)
-                break
-            
-        if submissionStatus==1:
-            jobid=outputCMD["stdout"].split()[1].replace("<","").replace(">","")
-            return 1,jobid
-        
-        if i==nbtrials-1:
-            print "failed sumbmitting after: "+str(nbtrials)+" trials, will exit"
-            return 0,0
 
 
 #__________________________________________________________
@@ -113,14 +88,15 @@ def checkFile(f, tname):
     
 
     with warnings.catch_warnings(record=True) as was:
-        f=r.TFile.Open(f)
+        tf=r.TFile.Open(f)
         ctrlstr = 'probably not closed'
         for w in was:
             if ctrlstr in str(w.message):
                 #os.system('rm %s'%f)
                 return False
-    
-    f=r.TFile.Open(f)
+
+    print '---------------------------  ',f
+    tf=r.TFile.Open(f)
     tt=tf.Get(tname)
     if tt.GetEntries()==0:
         print 'file has 0 entries ===%s=== must be deleted'%f
@@ -145,16 +121,18 @@ if __name__=="__main__":
         All_files = glob.glob("%s/*.root"%(l))
         if len(All_files)==0:continue
         key=l.replace(basedir,'').replace('/','_')
-        print key
+        #print key
         
         ntot=0
         for i in xrange(len(All_files)):
             if os.path.isfile(All_files[i]):
-                print '-----------',All_files[i]
+                #print '-----------',All_files[i]
                 jobid=All_files[i].split('_')[-1]
                 jobid=jobid.replace('.root','')
+                if jobexits(uid, jobid): continue
                 if '/simu/' in All_files[i] or  '/SIMU/' in All_files[i]:
                     if not checkFile(All_files[i], 'events'):
+                        nevents=-1
                         addfile(uid,nevents,jobid, All_files[i],'BAD')
                         continue
                     tf=r.TFile.Open(All_files[i])
@@ -173,7 +151,7 @@ if __name__=="__main__":
                     addfile(uid,nevents,jobid, All_files[i],'DONE')
                 else:
                     print 'not correct'
-        print ntot
+        #print ntot
     
 
     with open(outname, 'w') as f:
