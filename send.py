@@ -223,13 +223,6 @@ if __name__=="__main__":
         print os.path.isfile(card)
 
 
-    for key, value in us.users.iteritems():
-        if key==user: 
-            userext=value
-    if userext<0:
-        print 'user not known ',user,'   exit'
-        sys.exit(3)
-
     for i in xrange(num_jobs):
         seed = int(datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3])
         seed = int('%i%i'%(seed,userext))
