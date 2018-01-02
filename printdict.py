@@ -10,6 +10,16 @@ if len(sys.argv)!=2:
     exit(3)
 
 
+import os
+def get_size(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
+
+
 def comma_me(amount):
     orig = amount
     new = re.sub("^(-?\d+)(\d{3})", '\g<1>,\g<2>', amount)
@@ -24,6 +34,7 @@ ntot_files=0
 ntot_files_bad=0
 indict=None
 indictname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
+size_tot=0
 with open(indictname) as f:
     indict = json.load(f)
 
@@ -54,12 +65,15 @@ for s, value in sorted(indict.items()):
         print 'user %s has njobs %i meaning %i'%(key,njobuser,int(100*njobuser/nfileseos))
         toaddus+=',,%i'%(100*njobuser/nfileseos)
     
+    size=get_size(outdir)/1000000000.
+
+    size_tot+=size
     print 'toaddus  ',toaddus
-    cmd='%s,,%s,,%i,,%i,,%i%s\n'%(outdir,comma_me(str(evttot)),njobs,nfileseos,nbad,toaddus)
+    cmd='%s,,%s,,%i,,%i,,%i,,%.2f%s\n'%(outdir,comma_me(str(evttot)),njobs,nfileseos,nbad,size,toaddus)
     OutFile.write(cmd)               
     ntot_events+=int(evttot)
     ntot_files+=int(njobs)
     ntot_files_bad+=int(nbad)
 
-cmd='%s,,%s,,%s,,%i,,%i\n'%('total',comma_me(str(ntot_events)),'',ntot_files,ntot_files_bad)
+cmd='%s,,%s,,%s,,%i,,%i,,%.2f\n'%('total',comma_me(str(ntot_events)),'',ntot_files,ntot_files_bad,size_tot)
 OutFile.write(cmd)
