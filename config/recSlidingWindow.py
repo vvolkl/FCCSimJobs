@@ -1,8 +1,7 @@
 import argparse
 simparser = argparse.ArgumentParser()
 
-simparser.add_argument('-N','--numEvents', type=int, help='Number of simulation events to run', required=True)
-simparser.add_argument('--inName', type=str, help='Name of the input file', default="/eos/experiment/fcc/hh/simulation/samples/v01/singlePart/electron/bFieldOn/eta0/100GeV/simu/output_condor_azaborow_201801050731401923.root") 
+simparser.add_argument('--inName', type=str, help='Name of the input file', required=True)
 simparser.add_argument('--outName', type=str, help='Name of the output file', required=True)
 
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
