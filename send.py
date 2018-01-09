@@ -118,6 +118,7 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--recSlidingWindow", action='store_true', help="Reconstruction with sliding window")
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
+    parser.add_argument("--noise", action='store_true', help="Add electronics noise")
 
     sim = False
     if '--recPositions' in sys.argv:
@@ -126,7 +127,10 @@ if __name__=="__main__":
         short_job_type = "recPos"
     elif '--recSlidingWindow' in sys.argv:
         default_options = 'config/recSlidingWindow.py'
-        job_type = "reco/slidingWindow"
+        if '--noise' in sys.argv:
+            job_type = "reco/slidingWindow/electronicsNoise"
+        else:
+            job_type = "reco/slidingWindow/noNoise"
         short_job_type = "recWin"
     elif '--recTopoClusters' in sys.argv:
         default_options = 'config/recTopoClusters.py'
@@ -327,7 +331,9 @@ if __name__=="__main__":
         if not magnetic_field:
             common_fccsw_command += ' --bFieldOff'
         if sim:
-            common_fccsw_command += '--seed %i'%(seed)
+            common_fccsw_command += ' --seed %i'%(seed)
+        if args.noise:
+            common_fccsw_command += ' --addElectronicsNoise'
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
@@ -353,8 +359,8 @@ if __name__=="__main__":
                         sys.exit(3)
                     frun.write('gunzip $JOBDIR/events.lhe.gz\n')
                     frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
-                    # run FCCSW using Pythia as generator
                     frun.write('cd $JOBDIR\n')
+                # run FCCSW using Pythia as generator
                 frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
             else:
                 # run single particles

@@ -3,6 +3,7 @@ simparser = argparse.ArgumentParser()
 
 simparser.add_argument('--inName', type=str, help='Name of the input file', required=True)
 simparser.add_argument('--outName', type=str, help='Name of the output file', required=True)
+simparser.add_argument('-N','--numEvents', type=int, help='Number of simulation events to run', required=True)
 
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
 
@@ -24,13 +25,20 @@ from Gaudi.Configuration import *
 ##############################################################################################################
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
-path_to_detector = '/afs/cern.ch/user/a/azaborow/FCCSW_fellow/'
+path_to_detector = '/afs/cern.ch/user/a/azaborow/public/FCCSW/'
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
-                  path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml']
+                  path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
+                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
+                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
+                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
+                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
+                  path_to_detector+'/Detector/DetFCChhTailCatcher/compact/FCChh_TailCatcher.xml',
+                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
+                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
 
 from Configurables import GeoSvc
-geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use, OutputLevel = WARNING)
+geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use)
 
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
@@ -129,8 +137,7 @@ createclusters = CreateCaloClustersSlidingWindow("CreateCaloClusters",
                                                  nEtaPosition = 3, nPhiPosition = 11,
                                                  nEtaDuplicates = 5, nPhiDuplicates = 11,
                                                  nEtaFinal = 7, nPhiFinal = 17,
-                                                 energyThreshold = 3,
-                                                 OutputLevel = VERBOSE)
+                                                 energyThreshold = 3)
 createclusters.clusters.Path = "caloClusters"
 
 # PODIO algorithm
@@ -156,5 +163,5 @@ ApplicationMgr(
     TopAlg = list_of_algorithms,
     EvtSel = 'NONE',
     EvtMax   = num_events,
-    ExtSvc = [podioevent, geoservice],
+    ExtSvc = [podioevent, geoservice]
 )
