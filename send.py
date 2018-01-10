@@ -9,7 +9,7 @@ import random
 from datetime import datetime
 
 #__________________________________________________________
-def getInputFiles(path, number):
+def getInputFiles(path):
     files = []
     import json
     dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
@@ -26,6 +26,10 @@ def getInputFiles(path, number):
     if len(files) == 0:
         print "ERROR, no input files"
         quit()
+    return files
+
+def takeOnlyNonexistingFiles(files):
+    # ToDo remove from list files that exist in a reco dictionary
     return files, len(files)
 
 #__________________________________________________________
@@ -265,7 +269,8 @@ if __name__=="__main__":
     if not sim:
         inputID = version+"/" + job_dir + "/simu"
         inputID = inputID.replace('//','/')
-        input_files, instatus = getInputFiles(inputID, num_jobs)
+        input_files = getInputFiles(inputID)
+        input_files, instatus = takeOnlyNonexistingFiles(input_files)
         if instatus < num_jobs:
             num_jobs = instatus
             print "WARNING Directory contains only ", instatus, " files, using all for the reconstruction"
