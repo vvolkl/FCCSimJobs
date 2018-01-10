@@ -265,7 +265,7 @@ if __name__=="__main__":
         input_files, instatus = getInputFiles(inputID, num_jobs)
         if instatus < num_jobs:
             num_jobs = instatus
-            print "Directory contains only ", instatus, " files, using all for the reconstruction"
+            print "WARNING Directory contains only ", instatus, " files, using all for the reconstruction"
         print "Input files for reconstruction:"
         print input_files
 
@@ -359,19 +359,19 @@ if __name__=="__main__":
                         sys.exit(3)
                     frun.write('gunzip $JOBDIR/events.lhe.gz\n')
                     frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
-                    frun.write('cd $JOBDIR\n')
                 # run FCCSW using Pythia as generator
+                frun.write('cd $JOBDIR\n')
                 frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
             else:
                 # run single particles
-                frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
                 frun.write('cd $JOBDIR\n')
-                frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-                frun.close()
+                frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         else:
             frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
-            frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-            frun.close()
+        # copy output to eos
+        frun.write('cd %s\n' %(current_dir))
+        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+        frun.close()
 
         if args.lsf:
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
