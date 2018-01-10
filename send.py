@@ -16,6 +16,9 @@ def getInputFiles(path, number):
     mydict=None
     with open(dicname) as f:
         mydict = json.load(f)
+    if not path in mydict.keys():
+        print "ERROR, dictionary ", dicname, " does not contain ", path
+        quit()
     for j in mydict[path]:
         if j['status']=='DONE':
             if os.path.exists(j['out']):
@@ -367,10 +370,10 @@ if __name__=="__main__":
                 frun.write('cd $JOBDIR\n')
                 frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         else:
+            frun.write('cd $JOBDIR\n')
             frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         # copy output to eos
-        frun.write('cd %s\n' %(current_dir))
-        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+        frun.write('python %s/eoscopy.py $JOBDIR/%s %s\n'%(current_dir,outfile,outdir))
         frun.close()
 
         if args.lsf:
