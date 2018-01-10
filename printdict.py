@@ -31,6 +31,7 @@ def comma_me(amount):
 OutFile   = open(sys.argv[1], 'w')
 ntot_events=0
 ntot_files=0
+ntot_fileseos=0
 ntot_files_bad=0
 indict=None
 indictname='/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
@@ -38,6 +39,7 @@ size_tot=0
 with open(indictname) as f:
     indict = json.load(f)
 
+mapuserstot=[]
 for s, value in sorted(indict.items()):
     evttot=0
     njobs=0
@@ -58,6 +60,7 @@ for s, value in sorted(indict.items()):
         for key, value in us.users.iteritems():
             if key in j['out']:
                 mapusers.append(key)
+                mapuserstot.append(key)
 
     toaddus=''
     for key, value in us.users.iteritems():
@@ -74,6 +77,11 @@ for s, value in sorted(indict.items()):
     ntot_events+=int(evttot)
     ntot_files+=int(njobs)
     ntot_files_bad+=int(nbad)
+    ntot_fileseos+=int(nfileseos)
+toaddustot=''
+for key, value in us.users.iteritems():
+    njobuser=sum(1 for ii in mapuserstot if ii == key)
+    toaddustot+=',,%i'%(njobuser)
 
-cmd='%s,,%s,,%s,,%i,,%i,,%.2f\n'%('total',comma_me(str(ntot_events)),'',ntot_files,ntot_files_bad,size_tot)
+cmd='%s,,%s,,%s,,%s,,%i,,%.2f%s\n'%('total',comma_me(str(ntot_events)),comma_me(str(ntot_fileseos)),comma_me(str(ntot_files)),ntot_files_bad,size_tot,toaddustot)
 OutFile.write(cmd)
