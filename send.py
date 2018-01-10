@@ -379,6 +379,7 @@ if __name__=="__main__":
             frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         # copy output to eos
         frun.write('python %s/eoscopy.py $JOBDIR/%s %s\n'%(current_dir,outfile,outdir))
+        frun.write('rm %s/%s\n'%(current_dir,outfile))
         frun.close()
 
         if args.lsf:
