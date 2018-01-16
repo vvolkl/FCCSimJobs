@@ -378,7 +378,7 @@ if __name__=="__main__":
         else:
             frun.write('cd $JOBDIR\n')
             frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
-        frun.write('python %s/eoscopy.py $JOBDIR/%s %s\n'%(current_dir,outfile,outdir))
+        frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
         frun.close()
 
         if args.lsf:
