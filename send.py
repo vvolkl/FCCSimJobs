@@ -295,7 +295,7 @@ if __name__=="__main__":
             frun.write('cd %s\n' %(path_to_FCCSW))
             frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         frun.write('cd %s\n' %(current_dir))
-        frun.write('python eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+        frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
         frun.close()
 
         if simargs.lsf:
