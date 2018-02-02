@@ -82,7 +82,7 @@ outtree.Branch("gen_status", gen_status)
 outtree.Branch("gen_pdgid", gen_pdgid)
 
 for event in intree:
-    for g in event.allGenParticles:
+    for g in event.GenParticles:
         position = r.TVector3(g.core.p4.px,g.core.p4.py,g.core.p4.pz)
 
         pt=math.sqrt(g.core.p4.px**2+g.core.p4.py**2)
@@ -103,7 +103,7 @@ for event in intree:
         gen_pdgid.push_back(g.core.pdgId)
         gen_status.push_back(g.core.status)
 
-    for c in event.cellHCalPositions:
+    for c in event.HCalBarrelCellPositions:
         position = r.TVector3(c.position.x,c.position.y,c.position.z)
         rec_ene.push_back(c.core.energy)
         rec_eta.push_back(position.Eta())
@@ -115,7 +115,7 @@ for event in intree:
         rec_z.push_back(c.position.z/10.)
         #print '  new eta HCAL  ',position.Eta(), ' pt  ',c.core.energy*position.Unit().Perp()
         
-    for c in event.cellECalPositions:
+    for c in event.ECalBarrelCellPositions:
         position = r.TVector3(c.position.x,c.position.y,c.position.z)
         rec_ene.push_back(c.core.energy)
         rec_eta.push_back(position.Eta())
@@ -127,7 +127,7 @@ for event in intree:
         rec_z.push_back(c.position.z/10.)
         #print '  new eta  ECLA  ',position.Eta(), ' pt  ',c.core.energy*position.Unit().Perp()
     
-    for c in event.cellExtHCalPositions:
+    for c in event.HCalExtBarrelCellPositions:
         position = r.TVector3(c.position.x,c.position.y,c.position.z)
         rec_ene.push_back(c.core.energy)
         rec_eta.push_back(position.Eta())
