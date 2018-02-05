@@ -166,11 +166,11 @@ else:
     from Configurables import HepMCToEDMConverter
     hepmc_converter = HepMCToEDMConverter("Converter")
     hepmc_converter.hepmc.Path="hepmc"
-    hepmc_converter.genparticles.Path="allGenParticles"
-    hepmc_converter.genvertices.Path="allGenVertices"
+    hepmc_converter.genparticles.Path="GenParticles"
+    hepmc_converter.genvertices.Path="GenVertices"
     from Configurables import SimG4PrimariesFromEdmTool
     particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-    particle_converter.genParticles.Path = "allGenParticles"
+    particle_converter.genParticles.Path = "GenParticles"
     geantsim.eventProvider = particle_converter
 
 # Magnetic field
@@ -313,8 +313,6 @@ from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc")
 out = PodioOutput("out")
 out.outputCommands = ["drop *",
-                      "keep allGenParticles",
-                      "keep allGenVertices",
                       "keep GenParticles",
                       "keep GenVertices",
                       "keep ECalBarrelCells",
