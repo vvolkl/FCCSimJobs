@@ -97,8 +97,8 @@ for event in intree:
     Ebench = .0
     Eem = 0
     Ehad = 0
-    EemFirst = 0
-    EhadLast = 0
+    EemLast = 0
+    EhadFirst = 0
     if event.GetBranchStatus("GenParticles"):
         for g in event.GenParticles:
             position = r.TVector3(g.core.p4.px,g.core.p4.py,g.core.p4.pz)
@@ -134,7 +134,7 @@ for event in intree:
         rec_z.push_back(c.position.z/10.)
         rec_detid.push_back(systemID(c.core.cellId))
         if hcalBarrel_decoder["layer"] == 0:
-            EhadLast += c.core.energy
+            EhadFirst += c.core.energy
         E += c.core.energy
         Ehad += c.core.energy
         
@@ -150,8 +150,8 @@ for event in intree:
         rec_y.push_back(c.position.y/10.)
         rec_z.push_back(c.position.z/10.)
         rec_detid.push_back(systemID(c.core.cellId))
-        if hcalBarrel_decoder["layer"] == lastECalBarrelLayer:
-            EemFirst += c.core.energy
+        if ecalBarrel_decoder["layer"] == lastECalBarrelLayer:
+            EemLast += c.core.energy
         E += c.core.energy
         Eem += c.core.energy
 
@@ -225,7 +225,7 @@ for event in intree:
         rec_detid.push_back(systemID(c.core.cellId))
         E += c.core.energy
 
-    ev_ebench[0] = benchmarkCorr(Eem,EemFirst,Ehad,EhadLast)
+    ev_ebench[0] = benchmarkCorr(Eem,EemLast,Ehad,EhadFirst)
     ev_e[0] = E
 
     outtree.Fill()
