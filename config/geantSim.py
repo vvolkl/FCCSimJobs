@@ -176,7 +176,7 @@ else:
     genfilter.filteredGenParticles.Path = "GenParticles"
     from Configurables import SimG4PrimariesFromEdmTool
     particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-    particle_converter.genParticles.Path = "allGenParticles"
+    particle_converter.genParticles.Path = "GenParticles"
     geantsim.eventProvider = particle_converter
 
 # Magnetic field
