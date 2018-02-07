@@ -168,9 +168,15 @@ else:
     hepmc_converter.hepmc.Path="hepmc"
     hepmc_converter.genparticles.Path="allGenParticles"
     hepmc_converter.genvertices.Path="allGenVertices"
+    from Configurables import GenParticleFilter
+### Filters generated particles
+# accept is a list of particle statuses that should be accepted
+    genfilter = GenParticleFilter("StableParticles", accept=[1], OutputLevel=DEBUG)
+    genfilter.allGenParticles.Path = "allGenParticles"
+    genfilter.filteredGenParticles.Path = "GenParticles"
     from Configurables import SimG4PrimariesFromEdmTool
     particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-    particle_converter.genParticles.Path = "allGenParticles"
+    particle_converter.genParticles.Path = "GenParticles"
     geantsim.eventProvider = particle_converter
 
 # Magnetic field
@@ -361,7 +367,7 @@ list_of_algorithms = [geantsim,
                       out]
 
 if simargs.pythia:
-    list_of_algorithms = [pythia8gen, hepmc_converter] + list_of_algorithms
+    list_of_algorithms = [pythia8gen, hepmc_converter, genfilter] + list_of_algorithms
 
 ApplicationMgr(
     TopAlg = list_of_algorithms,
