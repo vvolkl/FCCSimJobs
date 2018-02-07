@@ -112,7 +112,7 @@ if __name__=="__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local', type=bool, help='Use local FCCSW installation', default = False)
+    parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW', default = False)
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
 
@@ -128,11 +128,6 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
-
-    if '--local' in sys.argv:
-        path_to_INIT = '/afs/cern.ch/work/c/cneubuse/public/FCCSW/init.sh'
-        path_to_FCCSW = '/afs/cern.ch/work/c/cneubuse/public/FCCSW/'
-        print "FCCSW is taken from : ", path_to_FCCSW ,"\n"
 
     sim = False
     if '--recPositions' in sys.argv:
@@ -198,6 +193,23 @@ if __name__=="__main__":
     print "=================================="
     print "==      GENERAL SETTINGS       ==="
     print "=================================="
+
+    if '--local' in sys.argv:
+        print "FCCSW is taken from : ", args.local ,"\n"
+        import imp
+        path=imp.load_source('path', args.local)
+        try :
+            path_to_INIT = path.path_to_INIT
+        except AttributeError, e:
+            pass
+        try :
+            path_to_FCCSW = path.path_to_FCCSW
+        except AttributeError, e:
+            pass
+
+        print 'path_to_INIT : ',path_to_INIT
+        print 'path_to_FCCSW: ',path_to_FCCSW
+
     magnetic_field = not args.bFieldOff
     b_field_str = "bFieldOn" if not args.bFieldOff else "bFieldOff"
     num_events = args.numEvents if sim else -1 # if reconstruction is done use -1 to run over all events in file
