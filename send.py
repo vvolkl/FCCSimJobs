@@ -386,7 +386,7 @@ if __name__=="__main__":
             frun.write('cd $JOBDIR\n')
             frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         if '--recPositions' in sys.argv:
-            frun.write('python Convert.py edm.root $JOBDIR/%s\n'%(outfile))
+            frun.write('python %s/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
         frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
         frun.write('rm $JOBDIR/%s \n'%(outfile))
