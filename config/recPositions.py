@@ -42,15 +42,15 @@ geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use, OutputLevel = WARNIN
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEta"
-ecalFwdReadoutName = "EMFwdPhiEta"
+ecalEndcapReadoutName = "EMECPhiEtaReco"
+ecalFwdReadoutName = "EMFwdPhiEtaReco"
 # HCAL readouts
 hcalBarrelReadoutName = "BarHCal_Readout"
 hcalBarrelReadoutVolume = "HCalBarrel"
 hcalExtBarrelReadoutName = "ExtBarHCal_Readout"
 hcalExtBarrelReadoutVolume = "HCalExtBarrel"
-hcalEndcapReadoutName = "HECPhiEta"
-hcalFwdReadoutName = "HFwdPhiEta"
+hcalEndcapReadoutName = "HECPhiEtaReco"
+hcalFwdReadoutName = "HFwdPhiEtaReco"
 # Tail Catcher readout
 tailCatcherReadoutName = "Muons_Readout"
 ##############################################################################################################
