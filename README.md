@@ -33,7 +33,8 @@ Various options are available and are explained below.
    - and the number of jobs to send is configured through **-N**
    
 4. The default FCC Software verson is 8.3 taken from /cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/
-   - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/FCCSW/), to use this add **--local True**
+   - the **--local** option allows to initialize local SW installation, add your path in inits/private.py script
+   - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/FCCSW/), to use this add **--local inits/Coralie.py**
  
 5. Running examples are:
 
@@ -52,7 +53,7 @@ python send.py --singlePart --particle 11 -e 500 -N 1 --condor --etaMin 3.5 --et
 python send.py --singlePart --particle -211 -e 10 -N 1 --condor --recSlidingWindow --noise
 python send.py --physics --process Zqq --pt 1000 -N 1 --lsf --recSlidingWindow
 python send.py --physics --process Haa  -N 1 --lsf --recSlidingWindow
-python send.py --local True --singlePart --particle 11 -e 100 -N 1 --condor --recPositions
+python send.py --local inits/Coralie.py --singlePart --particle 11 -e 100 -N 1 --condor --recPositions
 ```
 
 5. Also, please often check the afs directory where the jobs where send, because there will be the log files stored there as well as the output root file when running on condor (needs to be understood)

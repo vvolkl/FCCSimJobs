@@ -361,6 +361,8 @@ if __name__=="__main__":
             common_fccsw_command += ' --seed %i'%(seed)
         if args.noise:
             common_fccsw_command += ' --addElectronicsNoise'
+        if args.physics:
+            common_fccsw_command += ' --physics'
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
