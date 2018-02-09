@@ -4,8 +4,6 @@ simparser = argparse.ArgumentParser()
 simparser.add_argument('--inName', type=str, help='Name of the input file', required=True)
 simparser.add_argument('--outName', type=str, help='Name of the output file', required=True)
 simparser.add_argument('-N','--numEvents',  type=int, help='Number of simulation events to run', required=True)
-simparser.add_argument("--physics", action='store_true', help="Physics events")
-
 
 simargs, _ = simparser.parse_known_args()
 
@@ -23,7 +21,7 @@ from Gaudi.Configuration import *
 ##############################################################################################################
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
-path_to_detector = '/afs/cern.ch/work/c/cneubuse/public/FCCSW/'
+path_to_detector = '/afs/cern.ch/work/c/cneubuse/public/CaloCellPositions/FCCSW/'
 #'/afs/cern.ch/work/h/helsens/public/FCCsoft/FCCSW-0.8.3/'
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
@@ -60,10 +58,7 @@ tailCatcherReadoutName = "Muons_Readout"
 from Configurables import ApplicationMgr, FCCDataSvc, PodioInput, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc", input=input_name)
 
-if simargs.physics :
-    podioinput = PodioInput("PodioReader", collections = ["ECalBarrelCells", "HCalBarrelCells", "HCalExtBarrelCells", "ECalEndcapCells", "HCalEndcapCells", "ECalFwdCells", "HCalFwdCells", "TailCatcherCells"], OutputLevel = DEBUG)
-else :    
-    podioinput = PodioInput("PodioReader", collections = ["ECalBarrelCells", "HCalBarrelCells", "HCalExtBarrelCells", "ECalEndcapCells", "HCalEndcapCells", "ECalFwdCells", "HCalFwdCells", "TailCatcherCells","GenParticles","GenVertices"], OutputLevel = DEBUG)
+podioinput = PodioInput("PodioReader", collections = ["ECalBarrelCells", "HCalBarrelCells", "HCalExtBarrelCells", "ECalEndcapCells", "HCalEndcapCells", "ECalFwdCells", "HCalFwdCells", "TailCatcherCells","GenParticles","GenVertices"], OutputLevel = DEBUG)
 
 ##############################################################################################################
 #######                                       CELL POSITIONS                                     #############
