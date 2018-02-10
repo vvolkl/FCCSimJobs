@@ -31,7 +31,6 @@ Various options are available and are explained below.
    - the batch system is either **--lsf**  or **--condor**
    - the number of events per job is configured through **-n**
    - and the number of jobs to send is configured through **-N**
-   - to use a local installation and or local setup of FCCSW, please create an init file under **inits** and add the appropriate field(s)
 
 4. The default FCC Software verson is 8.3 taken from /cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/
    - the **--local** option allows to initialize local SW installation, add your path in inits/private.py script
