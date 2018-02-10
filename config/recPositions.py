@@ -21,7 +21,7 @@ from Gaudi.Configuration import *
 ##############################################################################################################
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
-path_to_detector = '/afs/cern.ch/work/c/cneubuse/public/FCCSW/'
+path_to_detector = '/afs/cern.ch/work/c/cneubuse/public/CaloCellPositions/FCCSW/'
 #'/afs/cern.ch/work/h/helsens/public/FCCsoft/FCCSW-0.8.3/'
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
@@ -40,15 +40,15 @@ geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use, OutputLevel = WARNIN
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEta"
-ecalFwdReadoutName = "EMFwdPhiEta"
+ecalEndcapReadoutName = "EMECPhiEtaReco"
+ecalFwdReadoutName = "EMFwdPhiEtaReco"
 # HCAL readouts
 hcalBarrelReadoutName = "BarHCal_Readout"
 hcalBarrelReadoutVolume = "HCalBarrel"
 hcalExtBarrelReadoutName = "ExtBarHCal_Readout"
 hcalExtBarrelReadoutVolume = "HCalExtBarrel"
-hcalEndcapReadoutName = "HECPhiEta"
-hcalFwdReadoutName = "HFwdPhiEta"
+hcalEndcapReadoutName = "HECPhiEtaReco"
+hcalFwdReadoutName = "HFwdPhiEtaReco"
 # Tail Catcher readout
 tailCatcherReadoutName = "Muons_Readout"
 ##############################################################################################################

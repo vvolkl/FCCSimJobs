@@ -171,7 +171,7 @@ else:
     hepmc_converter = HepMCToEDMConverter("Converter")
     hepmc_converter.hepmc.Path="hepmc"
     hepmc_converter.genparticles.Path="allGenParticles"
-    hepmc_converter.genvertices.Path="allGenVertices"
+    hepmc_converter.genvertices.Path="GenVertices"
     from Configurables import GenParticleFilter
 ### Filters generated particles
 # accept is a list of particle statuses that should be accepted

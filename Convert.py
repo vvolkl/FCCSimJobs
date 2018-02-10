@@ -61,14 +61,17 @@ rec_z = r.std.vector(float)()
 rec_layer = r.std.vector(int)()
 rec_detid = r.std.vector(int)()
 
-ev_num = n.zeros(1, 'i')
-ev_e = n.zeros(1, dtype=float)
-ev_ebench = n.zeros(1, dtype=float)
-
 outfile=r.TFile(outfile_name,"recreate")
 outfile.mkdir('ana')
 r.gDirectory.cd('ana')
 outtree=r.TTree('hgc','hgc')
+
+maxEvent = intree.GetEntries()
+print 'Number of events : ',maxEvent
+
+ev_num = n.zeros(1, dtype=int) 
+ev_e =  n.zeros(1, dtype=float)
+ev_ebench =  n.zeros(1, dtype=float)
 
 outtree.Branch("ev_num", ev_num, "ev_num/I")
 outtree.Branch("ev_e", ev_e, "ev_e/D")
@@ -91,8 +94,9 @@ outtree.Branch("gen_energy", gen_energy)
 outtree.Branch("gen_status", gen_status)
 outtree.Branch("gen_pdgid", gen_pdgid)
 
+numEvent = 0
 for event in intree:
-    ev_num = event.GetEvent()
+    ev_num[0] = numEvent
     E = .0
     Ebench = .0
     Eem = 0
@@ -116,8 +120,6 @@ for event in intree:
 
             if math.fabs(tlv.E()-math.sqrt(g.core.p4.mass**2+g.core.p4.px**2+g.core.p4.py**2+g.core.p4.pz**2))>0.01 and g.core.status==1:
                 print '=======================etlv  ',tlv.E(),'    ',math.sqrt(g.core.p4.mass**2+g.core.p4.px**2+g.core.p4.py**2+g.core.p4.pz**2),'  eta  ',eta,'   phi   ',phi,'  x  ',g.core.p4.px,'  y  ',g.core.p4.py,'  z  ',g.core.p4.pz
-        #if g.core.status==1:
-            #print 'etlv  ',tlv.E(),'    ',math.sqrt(g.core.p4.mass**2+g.core.p4.px**2+g.core.p4.py**2+g.core.p4.pz**2),'  eta  ',eta,'   phi   ',phi,'  x  ',g.core.p4.px,'  y  ',g.core.p4.py,'  z  ',g.core.p4.pz
             gen_pdgid.push_back(g.core.pdgId)
             gen_status.push_back(g.core.status)
 
@@ -229,6 +231,7 @@ for event in intree:
     ev_e[0] = E
 
     outtree.Fill()
+
     gen_eta.clear()
     gen_phi.clear()
     gen_pt.clear()
@@ -245,6 +248,8 @@ for event in intree:
     rec_y.clear()
     rec_z.clear()
     rec_detid.clear()
+    
+    numEvent += 1
 outtree.Write()
 outfile.Write()
 outfile.Close()
