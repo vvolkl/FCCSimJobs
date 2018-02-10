@@ -1,7 +1,7 @@
 path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-version = 'v02_pre'
+version = 'v01'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -112,7 +112,7 @@ if __name__=="__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW', default = False)
+    parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW or version', default = False)
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
 
@@ -206,9 +206,14 @@ if __name__=="__main__":
             path_to_FCCSW = path.path_to_FCCSW
         except AttributeError, e:
             pass
+        try :
+            version = path.version
+        except AttributeError, e:
+            pass
 
         print 'path_to_INIT : ',path_to_INIT
         print 'path_to_FCCSW: ',path_to_FCCSW
+        print 'version      : ',version
 
     magnetic_field = not args.bFieldOff
     b_field_str = "bFieldOn" if not args.bFieldOff else "bFieldOff"
