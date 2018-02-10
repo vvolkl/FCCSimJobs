@@ -1,7 +1,7 @@
 path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-version = 'v01'
+version = 'v02_pre'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -12,7 +12,7 @@ from datetime import datetime
 def getInputFiles(path):
     files = []
     import json
-    dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v01.json'
+    dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v02_pre.json'
     mydict=None
     with open(dicname) as f:
         mydict = json.load(f)
@@ -361,6 +361,8 @@ if __name__=="__main__":
             common_fccsw_command += ' --seed %i'%(seed)
         if args.noise:
             common_fccsw_command += ' --addElectronicsNoise'
+        if args.physics:
+            common_fccsw_command += ' --physics'
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
