@@ -1,7 +1,7 @@
 path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-version = 'v02_pre'
+version = 'v01'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -9,10 +9,10 @@ import random
 from datetime import datetime
 
 #__________________________________________________________
-def getInputFiles(path):
+def getInputFiles(path,version):
     files = []
     import json
-    dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_v02_pre.json'
+    dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_'+version+'.json'
     mydict=None
     with open(dicname) as f:
         mydict = json.load(f)
@@ -112,7 +112,8 @@ if __name__=="__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW', default = False)
+    parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW')
+    parser.add_argument('--version', type=str, default = "v01", help='Specify the version of FCCSimJobs')
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
 
@@ -210,6 +211,8 @@ if __name__=="__main__":
         print 'path_to_INIT : ',path_to_INIT
         print 'path_to_FCCSW: ',path_to_FCCSW
 
+    version = args.version
+    print 'FCCSim version: ',version
     magnetic_field = not args.bFieldOff
     b_field_str = "bFieldOn" if not args.bFieldOff else "bFieldOff"
     num_events = args.numEvents if sim else -1 # if reconstruction is done use -1 to run over all events in file
@@ -288,7 +291,7 @@ if __name__=="__main__":
     if not sim:
         inputID = version+"/" + job_dir + "/simu"
         inputID = inputID.replace('//','/')
-        input_files = getInputFiles(inputID)
+        input_files = getInputFiles(inputID,version)
         input_files, instatus = takeOnlyNonexistingFiles(input_files)
         if instatus < num_jobs:
             num_jobs = instatus
