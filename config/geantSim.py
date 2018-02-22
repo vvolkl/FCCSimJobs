@@ -120,7 +120,11 @@ geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist=
 # range cut
 geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
 
-from Configurables import SimG4Alg, SimG4SaveCalHits, SimG4SingleParticleGeneratorTool
+from Configurables import SimG4Alg, SimG4SaveCalHits, SimG4SingleParticleGeneratorTool, SimG4SaveTrackerHits
+
+savetrackertool = SimG4SaveTrackerHits("saveTrackerHits", readoutNames = ["TrackerBarrelReadout", "TrackerEndcapReadout"]) 
+savetrackertool.positionedTrackHits.Path = "TrackerPositionedHits"
+savetrackertool.trackHits.Path = "TrackerHits"
 saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = [ecalBarrelReadoutName])
 saveecaltool.positionedCaloHits.Path = "ECalBarrelPositionedHits"
 saveecaltool.caloHits.Path = "ECalBarrelHits"
@@ -148,7 +152,7 @@ savetailcatchertool.positionedCaloHits = "TailCatcherPositionedHits"
 savetailcatchertool.caloHits = "TailCatcherHits"
 outputHitsTools += ["SimG4SaveCalHits/saveECalEndcapHits","SimG4SaveCalHits/saveECalFwdHits",
                     "SimG4SaveCalHits/saveHCalExtBarrelHits", "SimG4SaveCalHits/saveHCalEndcapHits",
-                    "SimG4SaveCalHits/saveHCalFwdHits", "SimG4SaveCalHits/saveTailCatcherHits"]
+                    "SimG4SaveCalHits/saveHCalFwdHits", "SimG4SaveCalHits/saveTailCatcherHits", "SimG4SaveTrackerHits/saveTrackerHits"]
 
 geantsim = SimG4Alg("SimG4Alg", outputs = outputHitsTools)
 
@@ -321,6 +325,7 @@ out = PodioOutput("out")
 out.outputCommands = ["drop *",
                       "keep GenParticles",
                       "keep GenVertices",
+                      "keep TrackerHits",
                       "keep ECalBarrelCells",
                       "keep ECalEndcapCells",
                       "keep ECalFwdCells",
