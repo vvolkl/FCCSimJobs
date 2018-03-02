@@ -116,6 +116,7 @@ if __name__=="__main__":
     parser.add_argument('--version', type=str, default = "v01", help='Specify the version of FCCSimJobs')
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
+    parser.add_argument("--no_eoscopy", action='store_true',  help="DON'T copy result files to eos")
 
     parser.add_argument('-n','--numEvents', type=int, help='Number of simulation events per job', required='--recPositions' not in sys.argv and '--recSlidingWindow' not in sys.argv and '--recTopoClusters' not in sys.argv and '--ntuple' not in sys.argv)
     parser.add_argument('-N','--numJobs', type=int, default = 10, help='Number of jobs to submit')
@@ -185,6 +186,7 @@ if __name__=="__main__":
     batchGroup = parser.add_mutually_exclusive_group(required = True) # Where to submit jobs
     batchGroup.add_argument("--lsf", action='store_true', help="Submit with LSF")
     batchGroup.add_argument("--condor", action='store_true', help="Submit with condor")
+    batchGroup.add_argument("--no_submit", action='store_true', help="Just generate scripts without submitting")
 
     lsfGroup = parser.add_argument_group('Pythia','Common for min bias and LHE')
     lsfGroup.add_argument('-q', '--queue', type=str, default='8nh', help='lxbatch queue (default: 8nh)')
@@ -405,14 +407,18 @@ if __name__=="__main__":
         if '--recPositions' in sys.argv:
             frun.write('python %s/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
-        frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-        frun.write('rm $JOBDIR/%s \n'%(outfile))
+        if not args.no_eoscopy:
+          frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+          frun.write('rm $JOBDIR/%s \n'%(outfile))
         frun.close()
 
         if args.lsf:
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
             batchid=-1
             job,batchid=SubmitToLsf(cmdBatch,10)
+        elif args.no_submit:
+            job = 0
+            print "scripts generated in ", logdir+'/'+frunname,
         else:
             os.system("mkdir -p %s/out"%logdir)
             os.system("mkdir -p %s/log"%logdir)
