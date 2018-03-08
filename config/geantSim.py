@@ -10,6 +10,7 @@ simparser.add_argument('--outName', type=str, help='Name of the output file', re
 genTypeGroup = simparser.add_mutually_exclusive_group(required = True) # Type of events to generate
 genTypeGroup.add_argument("--singlePart", action='store_true', help="Single particle events")
 genTypeGroup.add_argument("--pythia", action='store_true', help="Events generated with Pythia")
+genTypeGroup.add_argument("--useVertexSmearTool", action='store_true', help="Use the Gaudi Vertex Smearing Tool")
 
 from math import pi
 singlePartGroup = simparser.add_argument_group('Single particles')
@@ -168,13 +169,14 @@ if simargs.singlePart:
 else:
     from Configurables import PythiaInterface, GenAlg, GaussSmearVertex
     smeartool = GaussSmearVertex("GaussSmearVertex")
-    smeartool.xVertexSigma = 0.5*units.mm
-    smeartool.yVertexSigma = 0.5*units.mm
-    smeartool.zVertexSigma = 40*units.mm
-    smeartool.tVertexSigma = 180*units.picosecond
+    if simargs.useVertexSmearTool:
+      smeartool.xVertexSigma = 0.5*units.mm
+      smeartool.yVertexSigma = 0.5*units.mm
+      smeartool.zVertexSigma = 40*units.mm
+      smeartool.tVertexSigma = 180*units.picosecond
 
     pythia8gentool = PythiaInterface("Pythia8",Filename=card)
-    pythia8gen = GenAlg("Pythia8", SignalProvider=pythia8gentool)
+    pythia8gen = GenAlg("Pythia8", SignalProvider=pythia8gentool, VertexSmearingTool=smeartool)
     pythia8gen.hepmc.Path = "hepmc"
     from Configurables import HepMCToEDMConverter
     hepmc_converter = HepMCToEDMConverter("Converter")
