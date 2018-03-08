@@ -116,6 +116,7 @@ if __name__=="__main__":
     parser.add_argument('--version', type=str, default = "v01", help='Specify the version of FCCSimJobs')
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
+    parser.add_argument("--pythiaSmearVertex", action='store_true', help="Write vertex smearing parameters to pythia config file")
     parser.add_argument("--no_eoscopy", action='store_true',  help="DON'T copy result files to eos")
 
     parser.add_argument('-n','--numEvents', type=int, help='Number of simulation events per job', required='--recPositions' not in sys.argv and '--recSlidingWindow' not in sys.argv and '--recTopoClusters' not in sys.argv and '--ntuple' not in sys.argv)
@@ -396,6 +397,12 @@ if __name__=="__main__":
                     frun.write('echo "Beams:LHEF = $JOBDIR/events.lhe" >> $JOBDIR/card.cmd\n')
                 # run FCCSW using Pythia as generator
                 frun.write('cd $JOBDIR\n')
+                if args.pythiaSmearVertex:
+                  frun.write('echo "Beams:allowVertexSpread = on" >> $JOBDIR/card.cmd\n')
+                  frun.write('echo "Beams:sigmaVertexX = 0.5" >> $JOBDIR/card.cmd\n')
+                  frun.write('echo "Beams:sigmaVertexY = 0.5" >> $JOBDIR/card.cmd\n')
+                  frun.write('echo "Beams:sigmaVertexZ = 40.0" >> $JOBDIR/card.cmd\n')
+                  frun.write('echo "Beams:sigmaTime = 0.180" >> $JOBDIR/card.cmd\n')
                 frun.write('%s  --pythia --card $JOBDIR/card.cmd \n'%(common_fccsw_command))
             else:
                 # run single particles
