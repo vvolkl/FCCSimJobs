@@ -124,13 +124,17 @@ if __name__=="__main__":
     parser.add_argument('-o','--output', type=str, help='Path of the output on EOS', default="/eos/experiment/fcc/hh/simulation/samples/")
     parser.add_argument('-l','--log', type=str, help='Path of the logs', default = "BatchOutputs/")
 
+
     jobTypeGroup = parser.add_mutually_exclusive_group() # Type of job: simulation or reconstruction
     jobTypeGroup.add_argument("--sim", action='store_true', help="Simulation (default)")
     jobTypeGroup.add_argument("--recPositions", action='store_true', help="Generate positions of cells with deposited energy")
     jobTypeGroup.add_argument("--recSlidingWindow", action='store_true', help="Reconstruction with sliding window")
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
+    jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
+
+    parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
 
     sim = False
     if '--recPositions' in sys.argv:
@@ -152,6 +156,15 @@ if __name__=="__main__":
         default_options = '....' # TODO how ?
         job_type = "ntup"
         short_job_type = "ntup"
+    elif '--trackerPerformance' in sys.argv:
+        default_options = 'config/geantSim_trackerPerformance.py'
+        sim = True
+        if "--tripletTracker" in sys.argv:
+          job_type="simu/trkPerf_triplet"
+          short_job_type = "sim"
+        else:
+          job_type="simu/trkPerf_v3_03"
+          short_job_type = "sim"
     else:
         default_options = 'config/geantSim.py'
         job_type = "simu"
@@ -372,6 +385,8 @@ if __name__=="__main__":
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
+        if args.tripletTracker:
+          common_fccsw_command += '--tripletTracker'
         if sim:
             if args.physics:
                 frun.write('cp %s $JOBDIR/card.cmd\n'%(card))
