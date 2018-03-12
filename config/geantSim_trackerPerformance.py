@@ -186,7 +186,7 @@ out.outputCommands = ["drop *",
                       "keep GenParticles",
                       "keep GenVertices",
                       "keep simParticles",
-                      "keep simVertices"
+                      "keep simVertices",
                       "keep TrackerHits",
                       "keep TrackerPositionedHits",
                       "keep TrackerDigiPostPoint",
