@@ -185,6 +185,8 @@ out = PodioOutput("out")
 out.outputCommands = ["drop *",
                       "keep GenParticles",
                       "keep GenVertices",
+                      "keep simParticles",
+                      "keep simVertices"
                       "keep TrackerHits",
                       "keep TrackerPositionedHits",
                       "keep TrackerDigiPostPoint",
