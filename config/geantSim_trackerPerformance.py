@@ -119,8 +119,8 @@ geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
 from Configurables import SimG4Alg, SimG4SingleParticleGeneratorTool, SimG4SaveTrackerHits, SimG4SaveParticleHistory
 
 savehisttool = SimG4SaveParticleHistory("saveHistory")
-savehisttool.mcParticles.Path = "simParticles"
-savehisttool.genVertices.Path = "simVertices"
+savehisttool.mcParticles.Path = "SimParticles"
+savehisttool.genVertices.Path = "SimVertices"
 
 savetrackertool = SimG4SaveTrackerHits("saveTrackerHits", readoutNames = ["TrackerBarrelReadout", "TrackerEndcapReadout"]) 
 savetrackertool.positionedTrackHits.Path = "TrackerPositionedHits"
@@ -185,8 +185,8 @@ out = PodioOutput("out")
 out.outputCommands = ["drop *",
                       "keep GenParticles",
                       "keep GenVertices",
-                      "keep simParticles",
-                      "keep simVertices",
+                      "keep SimParticles",
+                      "keep SimVertices",
                       "keep TrackerHits",
                       "keep TrackerPositionedHits",
                       "keep TrackerDigiPostPoint",
