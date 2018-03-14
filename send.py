@@ -207,10 +207,6 @@ if __name__=="__main__":
             path_to_FCCSW = path.path_to_FCCSW
         except AttributeError, e:
             pass
-        try :
-            version = path.version
-        except AttributeError, e:
-            pass
 
         print 'path_to_INIT : ',path_to_INIT
         print 'path_to_FCCSW: ',path_to_FCCSW
