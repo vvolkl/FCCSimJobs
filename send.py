@@ -210,7 +210,6 @@ if __name__=="__main__":
 
         print 'path_to_INIT : ',path_to_INIT
         print 'path_to_FCCSW: ',path_to_FCCSW
-        print 'version      : ',version
 
     version = args.version
     print 'FCCSim version: ',version
