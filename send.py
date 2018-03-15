@@ -1,7 +1,7 @@
-path_to_INIT = '/cvmfs/fcc.cern.ch/sw/0.8.3/init_fcc_stack.sh'
+path_to_INIT = '/cvmfs/fcc.cern.ch/sw/views/releases/0.9.1/x86_64-slc6-gcc62-opt/setup.sh'
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
-path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/0.8.3/fccsw/0.8.3/x86_64-slc6-gcc62-opt/'
-version = 'v01'
+path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj'
+version = 'v02'
 import glob, os, sys,subprocess,cPickle
 import commands
 import time
@@ -270,13 +270,13 @@ if __name__=="__main__":
             print "phi: from ", phiMin, " to ", phiMax
             if not(phiMin == 0 and phiMax == 2*pi):
                 eta_str += "_phiFrom" + str(decimal.Decimal(str(phiMin)).normalize()).replace('-','M') + "To" + str(decimal.Decimal(str(phiMax)).normalize()).replace('-','M')
-        job_dir = "singlePart/" + particle_human_names[pdg] + "/" + b_field_str + "/" + eta_str + "/" + str(energy) + "GeV/"
+        job_dir = os.path.join("singlePart", particle_human_names[pdg], b_field_str, eta_str, str(energy) + "GeV")
     elif args.physics:
         print "=================================="
         print "==           PHYSICS           ==="
         print "=================================="
         process = args.process
-        print "proceess: ", process
+        print "process: ", process
         job_dir = "physics/" + process + "/" + b_field_str + "/"
         if process in lhe_physics:
             LHE = True
@@ -302,7 +302,7 @@ if __name__=="__main__":
     nbjobsSub=0
 
     # first make sure the output path for root files exists
-    outdir = output_path + "/"+version+"/" + job_dir + "/" + job_type + "/"
+    outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
     if not sim:
         inputID = version+"/" + job_dir + "/simu"
@@ -440,7 +440,7 @@ if __name__=="__main__":
             job,batchid=SubmitToLsf(cmdBatch,10)
         elif args.no_submit:
             job = 0
-            print "scripts generated in ", logdir+'/'+frunname,
+            print "scripts generated in ", os.path.join(logdir, frunname),
         else:
             os.system("mkdir -p %s/out"%logdir)
             os.system("mkdir -p %s/log"%logdir)

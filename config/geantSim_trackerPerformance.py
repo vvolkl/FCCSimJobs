@@ -83,7 +83,7 @@ from GaudiKernel import SystemOfUnits as units
 ##############################################################################################################
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
-path_to_detector = "/afs/cern.ch/work/v/vavolkl/public/fcc.cern.ch/sw/pre0.9.1/FCCSW/InstallArea/" #TODO: update with cvmfs installation
+path_to_detector = "/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj"
 
 if simargs.tripletTracker:
   detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
@@ -119,8 +119,8 @@ geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
 from Configurables import SimG4Alg, SimG4SingleParticleGeneratorTool, SimG4SaveTrackerHits, SimG4SaveParticleHistory
 
 savehisttool = SimG4SaveParticleHistory("saveHistory")
-savehisttool.mcParticles.Path = "simParticles"
-savehisttool.genVertices.Path = "simVertices"
+savehisttool.mcParticles.Path = "SimParticles"
+savehisttool.genVertices.Path = "SimVertices"
 
 savetrackertool = SimG4SaveTrackerHits("saveTrackerHits", readoutNames = ["TrackerBarrelReadout", "TrackerEndcapReadout"]) 
 savetrackertool.positionedTrackHits.Path = "TrackerPositionedHits"
@@ -185,8 +185,8 @@ out = PodioOutput("out")
 out.outputCommands = ["drop *",
                       "keep GenParticles",
                       "keep GenVertices",
-                      "keep simParticles",
-                      "keep simVertices",
+                      "keep SimParticles",
+                      "keep SimVertices",
                       "keep TrackerHits",
                       "keep TrackerPositionedHits",
                       "keep TrackerDigiPostPoint",
