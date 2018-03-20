@@ -13,29 +13,37 @@ simparser.add_argument('--tripletTracker', action="store_true", help="Use the tr
 genTypeGroup = simparser.add_mutually_exclusive_group(required = True) # Type of events to generate
 genTypeGroup.add_argument("--singlePart", action='store_true', help="Single particle events")
 genTypeGroup.add_argument("--pythia", action='store_true', help="Events generated with Pythia")
-genTypeGroup.add_argument("--useVertexSmearTool", action='store_true', help="Use the Gaudi Vertex Smearing Tool")
+genTypeGroup.add_argument("--noVertexSmearTool", action='store_true', help="DONT use the Gaudi Vertex Smearing Tool")
 
 from math import pi
 singlePartGroup = simparser.add_argument_group('Single particles')
 import sys
 
 
-singlePartGroup.add_argument('--pt',  type=float, nargs="+", help="list of pt values [MeV]!!!")
-ptList=[1*units.GeV, 2*units.GeV,5 * units.GeV,10*units.GeV, 100*units.GeV, 1000*units.GeV, 10000*units.GeV]
 
-singlePartGroup.add_argument('--energy', type=float, default=1000., help='energy')
+singlePartGroup.add_argument('--discretePtSpectrum', action="store_true", help='use continuous pt spectrum')
+singlePartGroup.add_argument('--linSpacedPt', action="store_true", help='use logspaced pt spectrum')
+singlePartGroup.add_argument('--ptMin', type=float, default=500., help='Minimal pt')
+singlePartGroup.add_argument('--ptMax', type=float, default=100000000., help='Maximal pt')
 singlePartGroup.add_argument('--etaMin', type=float, default=0., help='Minimal pseudorapidity')
 singlePartGroup.add_argument('--etaMax', type=float, default=0., help='Maximal pseudorapidity')
 singlePartGroup.add_argument('--phiMin', type=float, default=0, help='Minimal azimuthal angle')
 singlePartGroup.add_argument('--phiMax', type=float, default=2*pi, help='Maximal azimuthal angle')
 singlePartGroup.add_argument('--particle', type=int, required='--singlePart' in sys.argv, help='Particle type (PDG)')
 
+singlePartGroup.add_argument('--pt',  type=float, nargs="+", help="list of pt values [MeV]!!!")
+
 pythiaGroup = simparser.add_argument_group('Pythia','Common for min bias and LHE')
 pythiaGroup.add_argument('-c', '--card', type=str, default='Generation/data/Pythia_minbias_pp_100TeV.cmd', help='Path to Pythia card (default: PythiaCards/default.cmd)')
 
 simargs, _ = simparser.parse_known_args()
-if simargs.pt:
-  ptList = args.pt
+
+logSpacedPt = not simargs.linSpacedPt
+ptList = []
+if simargs.discretePtSpectrum:
+  ptList=[1*units.GeV, 2*units.GeV,5 * units.GeV,10*units.GeV, 100*units.GeV, 1000*units.GeV, 10000*units.GeV]
+  if simargs.pt:
+    ptList = simargs.pt
 
 print "=================================="
 print "==      GENERAL SETTINGS       ==="
@@ -49,7 +57,6 @@ print "number of events = ", num_events
 print "seed: ", seed
 print "output name: ", output_name
 if simargs.singlePart:
-    energy = simargs.energy
     etaMin = simargs.etaMin
     etaMax = simargs.etaMax
     phiMin = simargs.phiMin
@@ -60,7 +67,6 @@ if simargs.singlePart:
     print "==       SINGLE PARTICLES      ==="
     print "=================================="
     print "particle PDG, name: ", pdg, " ", particle_geant_names[pdg]
-    print "energy: ", energy, "GeV"
     if etaMin == etaMax:
         print "eta: ", etaMin
     else:
@@ -141,14 +147,14 @@ geantsim = SimG4Alg("SimG4Alg", outputs = outputHitsTools)
 
 from Configurables import GaussSmearVertex, ConstPtParticleGun, GenAlg
 smeartool = GaussSmearVertex("GaussSmearVertex")
-if simargs.useVertexSmearTool:
+if not simargs.noVertexSmearTool:
   smeartool.xVertexSigma = 0.5*units.mm
   smeartool.yVertexSigma = 0.5*units.mm
   smeartool.zVertexSigma = 40*units.mm
   smeartool.tVertexSigma = 180*units.picosecond
 
 if simargs.singlePart:
-    pgun_tool = ConstPtParticleGun(PdgCodes=[pdg], PhiMin=phiMin, PhiMax=phiMax, EtaMin=etaMin, EtaMax=etaMax, PtList=ptList)
+    pgun_tool = ConstPtParticleGun(PdgCodes=[pdg], PhiMin=phiMin, PhiMax=phiMax, EtaMin=etaMin, EtaMax=etaMax, PtList=ptList, PtMin=simargs.ptMin, PtMax=simargs.ptMax, logSpacedPt=logSpacedPt )
     genalg= GenAlg("Pythia8", SignalProvider=pgun_tool, VertexSmearingTool=smeartool)
     genalg.hepmc.Path = "hepmc"
 else:
