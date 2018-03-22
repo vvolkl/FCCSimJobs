@@ -272,7 +272,7 @@ if __name__=="__main__":
         print card
         print os.path.isfile(card)
 
-
+    seed=''
     for i in xrange(num_jobs):
         if sim:
             seed=ut.getuid()
@@ -409,9 +409,9 @@ if __name__=="__main__":
             commands.getstatusoutput('chmod 777 %s/%s'%(logdir,fsubname))
             fsub.write('executable            = %s/%s\n' %(logdir,frunname))
             fsub.write('arguments             = $(ClusterID) $(ProcId)\n')
-            fsub.write('output                = %s/out/job.%s.$(ClusterId).$(ProcId).out\n'%(logdir,uniqueID))
-            fsub.write('log                   = %s/log/job.%s.$(ClusterId).log\n'%(logdir,uniqueID))
-            fsub.write('error                 = %s/err/job.%s.$(ClusterId).$(ProcId).err\n'%(logdir,uniqueID))
+            fsub.write('output                = %s/out/job.%s.$(ClusterId).$(ProcId).out\n'%(logdir,str(seed)))
+            fsub.write('log                   = %s/log/job.%s.$(ClusterId).log\n'%(logdir,str(seed)))
+            fsub.write('error                 = %s/err/job.%s.$(ClusterId).$(ProcId).err\n'%(logdir,str(seed)))
             if args.physics:
                 fsub.write('RequestCpus = 8\n')
             else:
