@@ -10,7 +10,6 @@ class merger():
         self.indir = yamldir+version
         self.yamlcheck = yamldir+version+'/check.yaml'
         self.process = process
-        self.basedir = yamldir
 #__________________________________________________________
     def merge(self, force):
         
@@ -18,7 +17,7 @@ class merger():
         ldir=[x[0] for x in os.walk(self.indir)]
         process = ''
         for l in ldir:
-            process = l.replace(self.basedir,"")
+            process = l.replace(self.indir,"")
             if self.process!='' and self.process!=process: 
                 continue
             outfile=l+'/merge.yaml'
@@ -86,3 +85,5 @@ class merger():
             ut.yamlstatus(self.yamlcheck, process, True)
             if ndone+nbad==len(All_files):
                 ut.yamlstatus(self.yamlcheck, process, True)
+            else:
+                ut.yamlstatus(self.yamlcheck, process, False)
