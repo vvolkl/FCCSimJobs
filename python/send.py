@@ -299,7 +299,7 @@ if __name__=="__main__":
         if args.physics:
             frunname = 'job_%s_%s_%s.sh'%(short_job_type,process,str(seed))
         else:
-            frunname = 'job_%s_%s_%dGeV_eta%s_%s.sh'%(short_job_type,particle_human_names[pdg],energy,str(decimal.Decimal(str(etaMax)).normalize()),uniqueID)
+            frunname = 'job_%s_%s_%dGeV_eta%s_%s.sh'%(short_job_type,particle_human_names[pdg],energy,str(decimal.Decimal(str(etaMax)).normalize()),str(seed))
 
         os.system("mkdir -p %s"%logdir)
         frun = None
