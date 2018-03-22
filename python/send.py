@@ -427,6 +427,8 @@ if __name__=="__main__":
             print cmdBatch
             batchid=-1
             job,batchid=ut.SubmitToCondor(cmdBatch,10)
+            ut.yamlstatus(yamlcheck, uid, False)
+
         nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
