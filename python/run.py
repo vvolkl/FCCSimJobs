@@ -43,12 +43,12 @@ if __name__=="__main__":
     elif args.clean:
         print 'clean the dictionnary and eos'
         import cleaner as clf
-        clean=clf.cleanfailed(indir, yamldir, args.process, args.version)
+        clean=clf.cleaner(indir, yamldir, args.process, args.version)
         clean.clean()
 
 
     elif args.cleanold:
         print 'clean the dictionnary from old jobs that have not been checked'
         import cleaner as clf
-        clean=clf.cleanfailed(indir, yamldir, args.process, args.version)
+        clean=clf.cleaner(indir, yamldir, args.process, args.version)
         clean.cleanoldjobs()
