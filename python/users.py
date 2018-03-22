@@ -5,4 +5,5 @@ users={'helsens':1,
        'selvaggi':5,
        'djamin':6,
        'aleksa':7,
-       'vavolkl': 8}
+       'vavolkl': 8,
+       'jhrdinka':9}
