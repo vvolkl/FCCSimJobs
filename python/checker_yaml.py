@@ -10,6 +10,7 @@ import utils as ut
 eostest='/eos/experiment/fcc/hh/tests/testfile.lhe.gz'
 eostest_size=1312594
 treename='events'
+
 class checker_yaml():
 
 #__________________________________________________________
@@ -22,8 +23,6 @@ class checker_yaml():
         self.fext = fext
         self.yamlcheck = yamldir+self.version+'/check.yaml'
         self.process = process
-        self.basedir_yaml = yamldir
-        self.basedir_eos = indir
 
 #__________________________________________________________
     def dir_exist(self, mydir):
@@ -99,7 +98,7 @@ class checker_yaml():
             sys.exit(3)
     
         for process in ldir:
-            uid=process.replace(self.basedir_eos,"")
+            uid=process.replace(self.indir,"")
             if uid=="": continue
             if self.process!='' and uid!=self.process: continue
             All_files = glob.glob("%s/output_*.root"%(process))
@@ -109,7 +108,7 @@ class checker_yaml():
             print 'number of files  ',len(All_files)
             print 'process from the input directory ',uid
 
-            outdir = self.makeyamldir(self.basedir_yaml+uid)
+            outdir = self.makeyamldir(self.yamldir+uid)
             hasbeenchecked=False
             nevents_tot=0
             njobsdone_tot=0
