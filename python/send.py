@@ -55,6 +55,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW')
     parser.add_argument('--version', type=str, default = "v03", help='Specify the version of FCCSimJobs')
+    yamlcheck = yamldir+version+'/check.yaml'
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
     parser.add_argument("--pythiaSmearVertex", action='store_true', help="Write vertex smearing parameters to pythia config file")
@@ -273,10 +274,11 @@ if __name__=="__main__":
         print os.path.isfile(card)
 
     seed=''
+    uid=os.path.join(version, job_dir, job_type)
     for i in xrange(num_jobs):
         if sim:
             seed=ut.getuid()
-            yamldir_process = '%s/%s'%(yamldir,os.path.join(version, job_dir, job_type))
+            yamldir_process = '%s/%s'%(yamldir,uid)
             if not ut.dir_exist(yamldir_process):
                 os.system("mkdir -p %s"%yamldir_process)
             myyaml = my.makeyaml(yamldir_process, seed)
@@ -389,6 +391,7 @@ if __name__=="__main__":
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
             batchid=-1
             job,batchid=ut.SubmitToLsf(cmdBatch,10)
+            ut.yamlstatus(yamlcheck, uid, False)
         elif args.no_submit:
             job = 0
             print "scripts generated in ", os.path.join(logdir, frunname),
@@ -424,6 +427,8 @@ if __name__=="__main__":
             print cmdBatch
             batchid=-1
             job,batchid=ut.SubmitToCondor(cmdBatch,10)
+            ut.yamlstatus(yamlcheck, uid, False)
+
         nbjobsSub+=job
 
     print 'succesfully sent %i  jobs'%nbjobsSub
