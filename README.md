@@ -46,7 +46,7 @@ Physics
 =======
 If **--physics** is used, the following options are possible
    - **--process** to select the type of process. Two types are available
-      - from LHE events, this will call a gun that will produce 2 back to back objects, the following keys are available **ljets**, **top**, **Wqq**, **Zqq**, **Hbb**. If this option is used, the pt can also be given using **--pt**
+      - from LHE events, this will call a gun that will produce 2 back to back objects, the following keys are available **ljets**, **cjets**, **bjets**, **top**, **Wqq**, **Zqq**, **Hbb**. If this option is used, the pt can also be given using **--pt**
       - from calling pythia8 direcly, thus generating the events at 100TeV, the following keys are available **MinBias**, **Haa**, **Zee**, **H4e**
       
 
@@ -106,3 +106,4 @@ Expert mode
 ===========
 
 python python/run.py --check --version v03 --process  physics/MinBias/bFieldOn/etaFull/simu  --force
+python python/run.py --clean --version v03
