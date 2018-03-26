@@ -59,18 +59,26 @@ class checker_yaml():
         try :
             tt=tf.Get(tname)
             if tt==None:
-                print 'file ===%s=== must be deleted'%f
-            #os.system('rm %s'%f)
-                return False
+                try :
+                    tt=tf.Get('ana/hgc')
+                    if tt==None:
+                        print 'file ===%s=== must be deleted'%f
+                        return -1,False
+                    else: tname='ana/hgc'
+
+                except:
+                    print "Unexpected error:", sys.exc_info()[0]
+                    print 'file ===%s=== must be deleted'%f
+                    return -1,False
 
         except IOError as e:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            
         except ValueError:
             print "Could read the file"
         except:
             print "Unexpected error:", sys.exc_info()[0]
             print 'file ===%s=== must be deleted'%f
-        #os.system('rm %s'%f)
             return -1,False
     
 
@@ -101,6 +109,7 @@ class checker_yaml():
             uid=process.replace(self.indir,"")
             if uid=="": continue
             if self.process!='' and uid!=self.process: continue
+            #if ut.yamlcheck(self.yamlcheck, uid) and not force :continue
             All_files = glob.glob("%s/output_*.root"%(process))
             if len(All_files)==0:continue
 
