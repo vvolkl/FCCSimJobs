@@ -82,6 +82,8 @@ def getJobInfo(argv):
         default_options = 'config/recTopoClusters.py'
         if '--noise' in argv:
             job_type = "ntup/topoClusters/electronicsNoise"
+        elif '--addPileupNoise' in argv:
+            job_type = "ntup/topoClusters/pileupNoise_mu100"
         else:
             job_type = "ntup/topoClusters/noNoise"
         short_job_type = "recTopo"
