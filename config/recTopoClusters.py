@@ -7,7 +7,7 @@ simparser.add_argument('-N','--numEvents',  type=int, help='Number of simulation
 simparser.add_argument("--physics", action='store_true', help="Physics events")
 
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
-simparser.add_argument("--addPileupNoise", action='store_true', help="Add pileup noise (default: false)")
+simparser.add_argument("--addPileupNoise", action='store_true', help="Add pileup noise")
 simparser.add_argument("--calibrate", action='store_true', help="Calibrate clusters (default: false)")
 
 simargs, _ = simparser.parse_known_args()
@@ -17,7 +17,7 @@ print "==      GENERAL SETTINGS       ==="
 print "=================================="
 num_events = simargs.numEvents
 input_name = simargs.inName
-output_name = simargs.outName
+output_name = 'clusters.root'
 elNoise = simargs.addElectronicsNoise
 puNoise = simargs.addPileupNoise
 calib = simargs.calibrate
@@ -96,22 +96,6 @@ from Configurables import ApplicationMgr, FCCDataSvc, PodioInput, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc", input=input_name)
 
 podioinput = PodioInput("PodioReader", collections = ["ECalBarrelCells", "HCalBarrelCells", "HCalExtBarrelCells", "ECalEndcapCells", "HCalEndcapCells", "ECalFwdCells", "HCalFwdCells", "TailCatcherCells","GenParticles","GenVertices"], OutputLevel = DEBUG)
-
-##############################################################################################################
-#######                                       REWRITE HCAL BITFIElD                              #############
-##############################################################################################################
-
-from Configurables import RewriteHCalBarrelBitfield
-rewriteHcal = RewriteHCalBarrelBitfield("RewriteHCalBitfield",
-                                        oldReadoutName = hcalBarrelReadoutName,
-                                        newReadoutName = hcalBarrelReadoutVolume,
-                                        # specify if segmentation is removed                                                                                                                                                               
-                                        removeIds = ["tile","eta","phi"],
-                                        debugPrint = 0,
-                                        OutputLevel = INFO)
-rewriteHcal.inhits.Path = "HCalBarrelCells"
-rewriteHcal.outhits.Path = "HCalBarrelCellsForTopo"
-
 
 ##############################################################################################################                                                                                                                 
 #######                                       RECALIBRATE ECAL                                   #############                                                                                                                   
@@ -221,8 +205,8 @@ if elNoise:
                                             addCellNoise = True, filterCellNoise = False,
                                             noiseTool = noiseHcal,
                                             OutputLevel = INFO)
-    createHcalBarrelCells.hits.Path="HCalBarrelCellsForTopo"
-    createHcalBarrelCells.cells.Path="HCalBarrelCellsForTopoNoise"
+    createHcalBarrelCells.hits.Path="HCalBarrelCells"
+    createHcalBarrelCells.cells.Path="HCalBarrelCellsNoise"
 
     # Create topo clusters
     from Configurables import CaloTopoClusterInputTool, CaloTopoCluster
@@ -238,7 +222,7 @@ if elNoise:
     createTopoInputNoise.ecalBarrelCells.Path = "ECalBarrelCellsNoise"
     createTopoInputNoise.ecalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.ecalFwdCells.Path = "emptyCaloCells"
-    createTopoInputNoise.hcalBarrelCells.Path = "HCalBarrelCellsForTopoNoise"
+    createTopoInputNoise.hcalBarrelCells.Path = "HCalBarrelCellsNoise"
     createTopoInputNoise.hcalExtBarrelCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalFwdCells.Path = "emptyCaloCells"
@@ -370,8 +354,8 @@ if puNoise:
                                             addCellNoise = True, filterCellNoise = False,
                                             noiseTool = noiseHcal,
                                             OutputLevel = INFO)
-    createHcalBarrelCells.hits.Path="HCalBarrelCellsForTopo"
-    createHcalBarrelCells.cells.Path="HCalBarrelCellsForTopoNoise"
+    createHcalBarrelCells.hits.Path="HCalBarrelCells"
+    createHcalBarrelCells.cells.Path="HCalBarrelCellsNoise"
 
     # Create topo clusters
     from Configurables import CaloTopoClusterInputTool, CaloTopoCluster
@@ -387,7 +371,7 @@ if puNoise:
     createTopoInputNoise.ecalBarrelCells.Path = "ECalBarrelCellsNoise"
     createTopoInputNoise.ecalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.ecalFwdCells.Path = "emptyCaloCells"
-    createTopoInputNoise.hcalBarrelCells.Path = "HCalBarrelCellsForTopoNoise"
+    createTopoInputNoise.hcalBarrelCells.Path = "HCalBarrelCellsNoise"
     createTopoInputNoise.hcalExtBarrelCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalFwdCells.Path = "emptyCaloCells"
@@ -484,7 +468,7 @@ createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
 createTopoInput.ecalBarrelCells.Path = "ECalBarrelCellsRedo"
 createTopoInput.ecalEndcapCells.Path = "emptyCaloCells"
 createTopoInput.ecalFwdCells.Path = "emptyCaloCells"
-createTopoInput.hcalBarrelCells.Path = "HCalBarrelCellsForTopo"
+createTopoInput.hcalBarrelCells.Path = "HCalBarrelCells"
 createTopoInput.hcalExtBarrelCells.Path = "emptyCaloCells"
 createTopoInput.hcalEndcapCells.Path = "emptyCaloCells"
 createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
@@ -577,12 +561,10 @@ chra = ChronoAuditor()
 audsvc = AuditorSvc()
 audsvc.Auditors = [chra]
 podioinput.AuditExecute = True
-rewriteHcal.AuditExecute = True
 createemptycells.AuditExecute = True
 out.AuditExecute = True
 
 list_of_algorithms = [podioinput,
-                      rewriteHcal,
                       recreateEcalBarrelCells,
                       createemptycells]
 
