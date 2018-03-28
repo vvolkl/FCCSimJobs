@@ -65,7 +65,7 @@ def takeOnlyNonexistingFiles(files, output):
 def getJobInfo(argv):
     if '--recPositions' in argv:
         default_options = 'config/recPositions.py'
-        job_type = "reco/positions"
+        job_type = "ntup/positions"
         short_job_type = "recPos"
         return default_options,job_type,short_job_type,False
 
@@ -80,7 +80,10 @@ def getJobInfo(argv):
 
     elif '--recTopoClusters' in argv:
         default_options = 'config/recTopoClusters.py'
-        job_type = "reco/topoClusters"
+        if '--noise' in argv:
+            job_type = "ntup/topoClusters/electronicsNoise"
+        else:
+            job_type = "ntup/topoClusters/noNoise"
         short_job_type = "recTopo"
         return default_options,job_type,short_job_type,False
 
@@ -142,6 +145,8 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
+    parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
+    parser.add_argument("--calibrate", action='store_true', help="Calibrate Topo-cluster")
 
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
 
@@ -429,6 +434,12 @@ if __name__=="__main__":
         if '--recPositions' in sys.argv:
             frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
+        elif '--recTopoClusters' in sys.argv:
+            frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
+            if '--calibrate' in sys.argv:
+                frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s_calibHistos.root\n'%( outdir+'/'+outfile ))
+                frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
+
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
           frun.write('rm $JOBDIR/%s \n'%(outfile))
