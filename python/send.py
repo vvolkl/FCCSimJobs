@@ -2,7 +2,6 @@ path_to_INIT = '/cvmfs/fcc.cern.ch/sw/views/releases/0.9.1/x86_64-slc6-gcc62-opt
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj'
 yamldir='/afs/cern.ch/work/h/helsens/public/FCCDicts/yaml/FCC/simu/'
-version = 'v03'
 
 import glob, os, sys
 import commands
@@ -455,7 +454,7 @@ if __name__=="__main__":
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
             batchid=-1
             job,batchid=ut.SubmitToLsf(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid, False)
+            ut.yamlstatus(yamlcheck, uid.replace("%s/"%version,""), False)
         elif args.no_submit:
             job = 0
             print "scripts generated in ", os.path.join(logdir, frunname),
@@ -491,7 +490,7 @@ if __name__=="__main__":
             print cmdBatch
             batchid=-1
             job,batchid=ut.SubmitToCondor(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid, False)
+            ut.yamlstatus(yamlcheck, uid.replace("%s/"%version,""), False)
 
         nbjobsSub+=job
 
