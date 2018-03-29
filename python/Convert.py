@@ -15,10 +15,19 @@ ecalEndcap_decoder = Decoder("system:4,subsystem:1,type:3,subtype:3,layer:8,eta:
 hcalEndcap_decoder = Decoder("system:4,subsystem:1,type:3,subtype:3,layer:8,eta:10,phi:10")
 ecalFwd_decoder = Decoder("system:4,subsystem:1,type:3,subtype:3,layer:8,eta:11,phi:10")
 hcalFwd_decoder = Decoder("system:4,subsystem:1,type:3,subtype:3,layer:8,eta:11,phi:10")
+trackerBarrel_decoder = Decoder("system:4,layer:5,module:18,x:-15,z:-15")
+trackerEndcap_decoder = Decoder("system:4,posneg:1,disc:5,component:17,x:-15,z:-15")
 
 lastECalBarrelLayer = int(7)
 lastECalEndcapLayer = int(39)
 lastECalFwdLayer = int(41)
+lastInnerTrackerBarrelLayer = int(5)
+lastOuterTrackerBarrelLayer = int(11)
+lastInnerTrackerPosECapLayer = int(16)
+lastInnerTrackerNegECapLayer = int(21)
+lastOuterTrackerPosECapLayer = int(27)
+lastOuterTrackerNegECapLayer = int(33)
+lastFwdTrackerPosECapLayer = int(42)
 
 def systemID(cellid):
     system_decoder.setValue(cellid)
@@ -273,6 +282,45 @@ for event in intree:
             rec_y.push_back(c.position.y/10.)
             rec_z.push_back(c.position.z/10.)
             rec_detid.push_back(systemID(c.core.cellId))
+            E += c.core.energy
+            numHits += 1
+
+         for c in event.TrackerPositionedHits:
+            trackerBarrel_decoder.setValue(c.core.cellId)
+            trackerEndcap_decoder.setValue(c.core.cellId)
+            position = r.TVector3(c.position.x,c.position.y,c.position.z)
+            rec_ene.push_back(c.core.energy)
+            rec_eta.push_back(position.Eta())
+            rec_phi.push_back(position.Phi())
+            rec_pt.push_back(c.core.energy*position.Unit().Perp())
+            sysID = systemID(c.core.cellId)
+            if  sysID == 0 :
+                rec_layer.push_back(trackerBarrel_decoder["layer"])
+            elif sysID == 1 :
+                rec_layer.push_back(trackerBarrel_decoder["layer"] + lastInnerTrackerBarrelLayer + 1)
+            elif sysID == 2 :
+                posneg = trackerBarrel_decoder["posneg"]
+                if posneg == 0 :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerBarrelLayer + 1)
+                else :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastInnerTrackerPosECapLayer + 1)
+            elif sysID == 3:
+                posneg = trackerBarrel_decoder["posneg"]
+                if posneg == 0 :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastInnerTrackerNegECapLayer + 1)
+                else :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerPosECapLayer + 1)
+            else :
+                posneg = trackerBarrel_decoder["posneg"]
+                if posneg == 0 :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerNegECapLayer + 1)
+                else :
+                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastFwdTrackerPosECapLayer + 1)
+            rec_x.push_back(c.position.x/10.)
+            rec_y.push_back(c.position.y/10.)
+            rec_z.push_back(c.position.z/10.)
+            rec_detid.push_back(systemID(c.core.cellId))
+            rec_bits.push_back(c.core.bits)
             E += c.core.energy
             numHits += 1
 
