@@ -311,23 +311,23 @@ for event in intree:
             elif sysID == 1 :
                 rec_layer.push_back(trackerBarrel_decoder["layer"] + lastInnerTrackerBarrelLayer + 1)
             elif sysID == 2 :
-                posneg = trackerBarrel_decoder["posneg"]
+                posneg = trackerEndcap_decoder["posneg"]
                 if posneg == 0 :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerBarrelLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerBarrelLayer + 1)
                 else :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastInnerTrackerPosECapLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerPosECapLayer + 1)
             elif sysID == 3:
-                posneg = trackerBarrel_decoder["posneg"]
+                posneg = trackerEndcap_decoder["posneg"]
                 if posneg == 0 :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastInnerTrackerNegECapLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerNegECapLayer + 1)
                 else :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerPosECapLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerPosECapLayer + 1)
             else :
-                posneg = trackerBarrel_decoder["posneg"]
+                posneg = trackerEndcap_decoder["posneg"]
                 if posneg == 0 :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastOuterTrackerNegECapLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerNegECapLayer + 1)
                 else :
-                    rec_layer.push_back(trackerBarrel_decoder["disc"] + lastFwdTrackerPosECapLayer + 1)
+                    rec_layer.push_back(trackerEndcap_decoder["disc"] + lastFwdTrackerPosECapLayer + 1)
             rec_x.push_back(c.position.x/10.)
             rec_y.push_back(c.position.y/10.)
             rec_z.push_back(c.position.z/10.)
@@ -366,6 +366,7 @@ for event in intree:
     rec_y.clear()
     rec_z.clear()
     rec_detid.clear()
+    rec_bits.clear()
     
     numEvent += 1
 
