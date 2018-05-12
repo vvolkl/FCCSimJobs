@@ -208,7 +208,6 @@ if __name__=="__main__":
         print 'path_to_FCCSW: ',path_to_FCCSW
 
     version = args.version
-    yamlcheck = yamldir+version+'/check.yaml'
 
     print 'FCCSim version: ',version
     magnetic_field = not args.bFieldOff
@@ -454,7 +453,6 @@ if __name__=="__main__":
             cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
             batchid=-1
             job,batchid=ut.SubmitToLsf(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid.replace("%s/"%version,""), False)
         elif args.no_submit:
             job = 0
             print "scripts generated in ", os.path.join(logdir, frunname),
@@ -490,7 +488,6 @@ if __name__=="__main__":
             print cmdBatch
             batchid=-1
             job,batchid=ut.SubmitToCondor(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid.replace("%s/"%version,""), False)
 
         nbjobsSub+=job
 
