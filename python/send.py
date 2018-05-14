@@ -79,13 +79,14 @@ def getJobInfo(argv):
 
     elif '--recTopoClusters' in argv:
         default_options = 'config/recTopoClusters.py'
+        job_type = "ntup/topoClusters"
         if '--noise' in argv:
             job_type = "ntup/topoClusters/electronicsNoise"
         elif '--addPileupNoise' in argv:
-            job_type = "ntup/topoClusters/pileupNoise_mu100"
+            job_type = "ntup/topoClusters/pileupNoise/"
         else:
             job_type = "ntup/topoClusters/noNoise"
-        short_job_type = "recTopo"
+        short_job_type = 'recTopo'
         return default_options,job_type,short_job_type,False
 
     elif '--ntuple' in argv:
@@ -145,10 +146,11 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
+    # Add noise on cluster level
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
     parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
-    parser.add_argument("--calibrate", action='store_true', help="Calibrate Topo-cluster")
-
+    parser.add_argument('-mu','--pileupEvents', type=int, help='Number pileup events (valid only for 100, 200, 500, 1000)', required='--addPileupNoise' in sys.argv)
+    
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
 
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
@@ -216,7 +218,11 @@ if __name__=="__main__":
     num_jobs = args.numJobs
     job_options = args.jobOptions
     output_path = args.output
-
+    mu = args.pileupEvents
+    # Add pileup specifics
+    if '--addPileupNoise' in sys.argv:
+        job_type += '/mu'+str(mu)+'/'
+ 
     print "B field: ", magnetic_field
     print "number of events = ", num_events
     print "output path: ", output_path
@@ -384,9 +390,7 @@ if __name__=="__main__":
         if args.noise:
             common_fccsw_command += ' --addElectronicsNoise'
         if args.addPileupNoise:
-            common_fccsw_command += ' --addPileupNoise'
-        if args.calibrate:
-            common_fccsw_command += ' --calibrate'        
+            common_fccsw_command += ' --addPileupNoise --mu %i'%(mu)
         if args.physics:
             common_fccsw_command += ' --physics'
         print '-------------------------------------'
@@ -440,10 +444,12 @@ if __name__=="__main__":
             frun.write('rm edm.root \n')
         elif '--recTopoClusters' in sys.argv:
             frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
-            if '--calibrate' in sys.argv:
-                frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s_calibHistos.root\n'%( outdir+'/'+outfile ))
-                frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
-
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+            reco_path = outdir.replace('/ntup/', '/reco/')
+            if not ut.dir_exist(reco_path):
+                os.system("mkdir -p %s"%(reco_path))
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s\n'%(reco_path+'/'+outfile))
+            
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
           frun.write('rm $JOBDIR/%s \n'%(outfile))

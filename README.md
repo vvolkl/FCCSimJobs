@@ -65,7 +65,8 @@ The default FCC Software verson is 0.9.1 taken from
 /cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj
 ```
    - the **--local** option allows to initialize local SW installation, add your path in inits/private.py script
-   - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/CaloCellPositions/FCCSW/), to use this add **--local inits/CellPositions.py**
+   - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
+   - the topo-clusters reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
  
 
 Running examples
@@ -88,7 +89,18 @@ python python/send.py --singlePart --particle 11 -e 500 -N 1 --condor --etaMin 3
 python python/send.py --singlePart --particle -211 -e 10 -N 1 --condor --recSlidingWindow --noise
 python python/send.py --physics --process Zqq --pt 1000 -N 1 --lsf --recSlidingWindow
 python python/send.py --physics --process Haa  -N 1 --lsf --recSlidingWindow
-python python/send.py --local inits/CellPositions.py --singlePart --particle 11 -e 100 -N 1 --condor --recPositions
+python python/send.py --local inits/reco.py --singlePart --particle 11 -e 100 -N 1 --condor --recPositions
+```
+to run the topo-clustering:
+```
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters
+
+```
+to add electronics noise in the reconstruction step, add **--noise**
+to include pielup noise, add **--addPileupNoise** and specify the piluep-configuration with **-mu** (choose from: 100, 200, 500 or 1000) 
+```
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
 ```
 
 Miscellaneous
