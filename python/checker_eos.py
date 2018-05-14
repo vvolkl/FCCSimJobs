@@ -56,7 +56,7 @@ class checker_eos():
             print 'mergefile  ',mergefile
             if not ut.file_exist(mergefile): 
                 if not ut.dir_exist('%s/%s'%(self.indirafs,proc)):
-                    os.system('mkdir %s/%s'%(self.indirafs,proc))
+                    os.system('mkdir -p %s/%s'%(self.indirafs,proc))
                 self.touch('%s/%s/check'%(self.indirafs,proc))
                 continue
 
@@ -80,7 +80,8 @@ class checker_eos():
             if ntot_files<nfileseos:
                 self.touch('%s/%s/check'%(self.indirafs,proc))
             elif  ntot_files>nfileseos:
-                os.system('rm %s/%s/events*.yaml'%(self.indirafs,proc))
+                print ' ntot_files>nfileseos ', ntot_files,nfileseos,proc
+                os.system('rm %s/%s/output*.yaml'%(self.indirafs,proc))
                 os.system('rm %s/%s/merge.yaml'%(self.indirafs,proc))
             else:
                 if ut.file_exist('%s/%s/check'%(self.indirafs,proc)):

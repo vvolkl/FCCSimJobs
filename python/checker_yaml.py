@@ -108,6 +108,7 @@ class checker_yaml():
         for process in ldir:
             uid=process.replace(self.indir,"")
             if uid=="": continue
+            #print uid,'      ',self.process
             if self.process!='' and uid!=self.process: continue
 
             print '%s/%s/check'%(self.yamldir,uid)
