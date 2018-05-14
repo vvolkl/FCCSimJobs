@@ -64,7 +64,7 @@ tailCatcherReadoutName = "Muons_Readout"
 ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
 ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
 # Geometry details to add noise to every Calo cell and paths to root files that have the noise const per cell
-pileupNoisePath = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/pileupNoiseBarrel_mu"+str(puEvents)+".root"
+pileupNoisePath = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/noiseBarrel_mu"+str(puEvents)+".root"
 ecalBarrelPileupNoiseHistName = "h_pileup_ecal_layer"
 hcalBarrelPileupNoiseHistName = "h_pileup_hcal_layer"
 ecalBarrelPileupOffsetHistName = "h_mean_pileup_ecal_layer"
@@ -255,7 +255,7 @@ if elNoise:
 #######                          NOISE/NO NOISE TOOL FOR CLUSTER THRESHOLDS                      #############
 ##############################################################################################################
 
-if puNoise:
+elif puNoise:
 
     from Configurables import CreateCaloCells, NoiseCaloCellsFromFileTool, TubeLayerPhiEtaCaloTool, CalibrateCaloHitsTool, NoiseCaloCellsFlatTool, NestedVolumesCaloTool
     # ECal Barrel noise
@@ -370,10 +370,10 @@ if puNoise:
 #######                                 TOPO-CLUSTERING                                          #############
 ##############################################################################################################
 
-# Electronic noise level without added noise for topo thresholds set to 1.875MeV and 2.875MeV in E and HCal
-readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
-                                       fileName = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_constNoiseLevel.root",
-                                       OutputLevel = DEBUG)
+# "Noise" level without added noise for topo thresholds set to 1.875MeV and 2.875MeV in E and HCal
+readNoNoisyCellsMap = TopoCaloNoisyCells("ReadNoNoisyCellsMap",
+                                         fileName = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_constNoiseLevel.root",
+                                         OutputLevel = DEBUG)
 # Create topo clusters
 from Configurables import CaloTopoClusterInputTool, CaloTopoCluster, TopoCaloNeighbours
 createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
@@ -400,7 +400,7 @@ createTopoClusters = CaloTopoCluster("CreateTopoClusters",
                                      # expects neighbours map from cellid->vec<neighbourIds>
                                      neigboursTool = readNeighboursMap,
                                      # tool to get noise level per cellid
-                                     noiseTool = readNoisyCellsMap,
+                                     noiseTool = readNoNoisyCellsMap,
                                      # cell positions tools for all sub-systems
                                      positionsECalBarrelTool = ECalBcells,
                                      positionsHCalBarrelTool = HCalBcellVols,
@@ -450,12 +450,9 @@ list_of_algorithms = [podioinput,
                       recreateEcalBarrelCells,
                       createemptycells]
 
-if elNoise:
-    list_of_algorithms += [createEcalBarrelCells, createHcalBarrelCells, createTopoClustersNoise]
- 
-if puNoise:
-    list_of_algorithms += [createEcalBarrelCells, createHcalBarrelCells, createTopoClustersNoise]
- 
+if elNoise or puNoise:
+    list_of_algorithms += [createEcalBarrelCells, createHcalBarrelCells, createTopoClustersNoise, positionsClusterBarrelNoise]
+
 else:
     list_of_algorithms += [createTopoClusters, positionsClusterBarrel]
 
@@ -464,6 +461,6 @@ list_of_algorithms += [out]
 ApplicationMgr(
     TopAlg = list_of_algorithms,
     EvtSel = 'NONE',
-    EvtMax   = num_events,
+    EvtMax   = 1, #num_events,
     ExtSvc = [geoservice, podioevent, audsvc],
     )

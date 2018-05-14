@@ -105,6 +105,13 @@ python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --l
 
 Miscellaneous
 ==============
+Formatting rules:
+- The directory names are used to identify their content. Please make sure that their are:
+  - only root files with **edm classes** in /simu/ and /reco/
+  - only root files with **ntuples** in /ntup/
+  - and **all other** types of outputs in /ana/ 
+If this is not followed, the files can be lost, due to the automatic cleaning of "bad" jobs/output files.
+
 - Also, please often check the afs directory where the jobs where send, because there will be the log files stored there as well as the output root file when running on condor (needs to be understood)
 
 - Few times a day, a script will run to check the jobs that have been processed and the results will be published on this webpage
@@ -112,7 +119,6 @@ http://fcc-physics-events.web.cern.ch/fcc-physics-events/FCCsim_v01.php
 
 - Once in a while you can run the clean script to remove all the jobs that are marked as failed in the database.
 This is something that can not be done centrally yet as I do not have rights to remove files I haven't produced.
-
 
 Expert mode
 ===========
