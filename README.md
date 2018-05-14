@@ -96,8 +96,8 @@ to run the topo-clustering:
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters
 
 ```
-to add electronics noise in the reconstruction step, add **--noise**
-to include pielup noise, add **--addPileupNoise** and specify the piluep-configuration with **-mu** (choose from: 100, 200, 500 or 1000) 
+- to add electronics noise in the reconstruction step, add **--noise**
+- to include pileup noise, add **--addPileupNoise** and specify the pileup configuration with **-mu** (choose from: 100, 200, 500 or 1000) 
 ```
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
