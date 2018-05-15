@@ -77,6 +77,18 @@ def getJobInfo(argv):
         short_job_type = "recWin"
         return default_options,job_type,short_job_type,False
 
+    elif '--estimatePileup' in sys.argv:
+        default_options = 'config/preparePileup.py'
+        job_type = "ana/pileup_cluster"
+        short_job_type = "pileup"
+        return default_options,job_type,short_job_type,False
+
+    elif '--mergePileup' in sys.argv:
+        default_options = 'config/overlayPileup.py'
+        job_type = "simuPU"
+        short_job_type = "pileup"
+        return default_options,job_type,short_job_type,False
+
     elif '--recTopoClusters' in argv:
         default_options = 'config/recTopoClusters.py'
         if '--noise' in argv:
@@ -143,16 +155,19 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--recPositions", action='store_true', help="Generate positions of cells with deposited energy")
     jobTypeGroup.add_argument("--recSlidingWindow", action='store_true', help="Reconstruction with sliding window")
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
+    jobTypeGroup.add_argument("--estimatePileup", action='store_true', help="Estimate pileup from minbias events")
+    jobTypeGroup.add_argument("--mergePileup", action='store_true', help="Estimate pileup from minbias events")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
     parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
     parser.add_argument("--calibrate", action='store_true', help="Calibrate Topo-cluster")
 
+    parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv, help='Pileup')
+
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
 
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
-
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
 
     genTypeGroup = parser.add_mutually_exclusive_group(required = True) # Type of events to generate
@@ -216,6 +231,16 @@ if __name__=="__main__":
     num_jobs = args.numJobs
     job_options = args.jobOptions
     output_path = args.output
+    if args.mergePileup:
+        job_type = "simuPU"+str(args.pileup)
+        short_job_type = "pileup"+str(args.pileup)
+        num_events = args.numEvents
+    elif args.recPositions and args.pileup:
+        job_type = "ntup_PU"+str(args.pileup)+"/positions"
+        short_job_type = "recPos"+str(args.pileup)
+    elif args.pileup:
+        job_type += "PU"+str(args.pileup)
+        short_job_type += "PU"+str(args.pileup)
 
     print "B field: ", magnetic_field
     print "number of events = ", num_events
@@ -284,18 +309,32 @@ if __name__=="__main__":
     # first make sure the output path for root files exists
     outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
-    if not sim:       
-        inputID = os.path.join(yamldir, version, job_dir, 'simu')
+    if not sim:
+        if not args.mergePileup and args.pileup and not (args.pileup == 0):
+            inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
+        else:
+            inputID = os.path.join(yamldir, version, job_dir, 'simu')
         outputID = os.path.join(yamldir, version, job_dir, job_type)
 
         input_files = getInputFiles(inputID)
         input_files, instatus = takeOnlyNonexistingFiles(input_files, outputID)
 
+        if instatus == 0:
+            print "WARNING Directory contains no files"
+            exit()
         if instatus < num_jobs:
             num_jobs = instatus
             print "WARNING Directory contains only ", instatus, " files, using all for the reconstruction"
         print "Input files for reconstruction:"
-        print input_files
+    if args.mergePileup:
+        # merging pileup events will be done randomly from a given event pool
+        all_inputs = ""
+        for f in input_files:
+            all_inputs += " " + f # event pool = all inputs
+        seed=ut.getuid() # to generate new output name
+        print 'seed  ',seed
+        outfile = 'output_%i.root'%(seed)
+        print "Name of the output file: ", outfile
 
     os.system("mkdir -p %s"%outdir)
     # first make sure the output path exists
@@ -386,9 +425,16 @@ if __name__=="__main__":
         if args.addPileupNoise:
             common_fccsw_command += ' --addPileupNoise'
         if args.calibrate:
-            common_fccsw_command += ' --calibrate'        
+            common_fccsw_command += ' --calibrate'
         if args.physics:
             common_fccsw_command += ' --physics'
+        if '--local' in sys.argv:
+            common_fccsw_command += ' --detectorPath ' + path_to_FCCSW
+        if args.mergePileup:
+            common_fccsw_command += ' --pileup ' + str(args.pileup)
+        if args.recPositions and args.pileup:
+            common_fccsw_command += ' --prefixCollections merged '
+            common_fccsw_command += ' --addMuons False '
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
@@ -434,9 +480,15 @@ if __name__=="__main__":
                 frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         else:
             frun.write('cd $JOBDIR\n')
-            frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
-        if '--recPositions' in sys.argv:
-            frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
+            if args.mergePileup:
+                frun.write('%s --inName %s\n'%(common_fccsw_command, all_inputs))
+            else:
+                frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
+        if args.recPositions:
+            if args.pileup: # in current PU simulations there are no tracker hits
+                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
+            else:
+                frun.write('python %s/python/Convert.py --tracker edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
         elif '--recTopoClusters' in sys.argv:
             frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
@@ -481,6 +533,7 @@ if __name__=="__main__":
             else:
                 fsub.write('RequestCpus = 4\n')
             fsub.write('+JobFlavour = "nextweek"\n')
+            fsub.write('+AccountingGroup = "group_u_FCC.local_gen"\n')
             fsub.write('queue 1\n')
             fsub.close()
             cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)

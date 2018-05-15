@@ -133,3 +133,17 @@ make the web page
 ```
 python python/run.py --web --version v03
 ```
+
+
+
+WARNING
+===========
+
+Official installation of FCCSW does not support certain options (not yet in the release). Please check the following list for the recommended versions:
+
+```
+--mergePileup --local inits/pileup.py
+--estimatePileup --local inits/pileup.py
+--recPositions --local inits/reco.py
+--recTopoClusters --local inits/reco.py
+```
