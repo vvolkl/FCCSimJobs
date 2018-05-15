@@ -22,6 +22,18 @@ import makeyaml as my
 import users as us
 
 #__________________________________________________________
+def warning(msg, ifConfirm = False):
+    print "=================================="
+    print "==           WARNING           ==="
+    print "=================================="
+    print msg
+    print "=================================="
+    if ifConfirm:
+        choice = raw_input("Do you want to exit and adjust arguments? [y/n] ")
+        if choice.lower() == 'y':
+            exit()
+
+#__________________________________________________________
 def getInputFiles(path):
     files = []
     All_files = glob.glob("%s/merge.yaml"%path)
@@ -236,7 +248,7 @@ if __name__=="__main__":
         short_job_type = "pileup"+str(args.pileup)
         num_events = args.numEvents
     elif args.recPositions and args.pileup:
-        job_type = "ntup_PU"+str(args.pileup)+"/positions"
+        job_type = "ntupPU"+str(args.pileup)+"/positions"
         short_job_type = "recPos"+str(args.pileup)
     elif args.pileup:
         job_type += "PU"+str(args.pileup)
@@ -306,6 +318,15 @@ if __name__=="__main__":
     rundir = os.getcwd()
     nbjobsSub=0
 
+    if args.mergePileup and not args.local == "inits/pileup.py":
+        warning("Please note that '--mergePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/pileup.py')", True)
+    if args.estimatePileup and not args.local == "inits/pileup.py":
+        warning("Please note that '--preparePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/pileup.py')", True)
+    if args.recPositions and not args.local == "inits/reco.py":
+        warning("Please note that '--recPositions' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.recTopoClusters and not args.local == "inits/reco.py":
+        warning("Please note that '--recTopoClusters' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+
     # first make sure the output path for root files exists
     outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
@@ -320,12 +341,11 @@ if __name__=="__main__":
         input_files, instatus = takeOnlyNonexistingFiles(input_files, outputID)
 
         if instatus == 0:
-            print "WARNING Directory contains no files"
+            warning("Directory contains no files")
             exit()
         if instatus < num_jobs:
             num_jobs = instatus
-            print "WARNING Directory contains only ", instatus, " files, using all for the reconstruction"
-        print "Input files for reconstruction:"
+            warning("Directory contains only ", instatus, " files, using all for the reconstruction")
     if args.mergePileup:
         # merging pileup events will be done randomly from a given event pool
         all_inputs = ""
