@@ -254,11 +254,8 @@ if __name__=="__main__":
         job_type = "simuPU"+str(args.pileup)
         short_job_type += "PU"+str(args.pileup)
         num_events = args.numEvents
-    elif (args.recPositions or args.recTopoClusters) and args.pileup: # if reconstruction is run on pileup (mixed) events
-        job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup))
-        short_job_type += "PU"+str(args.pileup)
-    elif args.recSlidingWindow and args.pileup: # if reconstruction is run on pileup events
-        job_type = job_type.replace("reco", "recoPU"+str(args.pileup))
+    elif (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup: # if reconstruction is run on pileup (mixed) events
+        job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
         short_job_type += "PU"+str(args.pileup)
     else:
         warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
