@@ -20,7 +20,7 @@ print "==      GENERAL SETTINGS       ==="
 print "=================================="
 num_events = simargs.numEvents
 input_name = simargs.inName
-output_name = 'clusters.root'
+output_name = simargs.outName
 elNoise = simargs.addElectronicsNoise
 puNoise = simargs.addPileupNoise
 puEvents = simargs.mu

@@ -107,11 +107,11 @@ def getJobInfo(argv):
         default_options = 'config/recTopoClusters.py'
         job_type = "ntup/topoClusters"
         if '--noise' in argv:
-            job_type = "ntup/topoClusters/electronicsNoise"
+            job_type = "reco/topoClusters/electronicsNoise"
         elif '--addPileupNoise' in argv:
-            job_type = "ntup/topoClusters/pileupNoise/"
+            job_type = "reco/topoClusters/pileupNoise/"
         else:
-            job_type = "ntup/topoClusters/noNoise"
+            job_type = "reco/topoClusters/noNoise"
         short_job_type = 'recTopo'
         return default_options,job_type,short_job_type,False
 
@@ -531,13 +531,13 @@ if __name__=="__main__":
         if args.recPositions:
             frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
-        elif '--recTopoClusters' in sys.argv:
-            frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
+        elif '--recTopoClusters' in sys.argv or '--recSlidingWindow' in sys.argv:
+            frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters.root\n'%(current_dir,outfile))
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-            reco_path = outdir.replace('/ntup/', '/reco/')
+            reco_path = outdir.replace('/reco', '/ntup')
             if not ut.dir_exist(reco_path):
                 os.system("mkdir -p %s"%(reco_path))
-            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s\n'%(reco_path+'/'+outfile))
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s/%s\n'%(outdir, outfile))
 
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
