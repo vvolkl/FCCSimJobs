@@ -204,6 +204,17 @@ if __name__=="__main__":
                               required = ('ljets' in sys.argv or 'top' in sys.argv or 'Wqq' in sys.argv
                                           or 'Zqq' in sys.argv or 'Hbb' in sys.argv),
                               help='Transverse momentum of simulated jets (valid only for Hbb, Wqq, Zqq, t, ljet)')
+
+    recoSlidingWinGroup = parser.add_argument_group('RecoSlidingWindow','Sliding window reconstruction')
+    recoSlidingWinGroup.add_argument('--winEta', type=int, default=7, help='Size of the final cluster in eta')
+    recoSlidingWinGroup.add_argument('--winPhi', type=int, default=19, help='Size of the final cluster in phi')
+    recoSlidingWinGroup.add_argument('--enThreshold', type=float, default=3., help='Energy threshold of the seeding clusters [GeV]')
+
+    recoTopoClusterGroup = parser.add_argument_group('RecoTopoCluster','Topological cluster reconstruction')
+    recoTopoClusterGroup.add_argument('--sigma1', type=int, default=4, help='Energy threshold [in number of sigmas] for seeding')
+    recoTopoClusterGroup.add_argument('--sigma2', type=int, default=2, help='Energy threshold [in number of sigmas] for neighbours')
+    recoTopoClusterGroup.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
+
     args, _ = parser.parse_known_args()
 
     batchGroup = parser.add_mutually_exclusive_group(required = True) # Where to submit jobs
@@ -257,8 +268,14 @@ if __name__=="__main__":
     elif (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup: # if reconstruction is run on pileup (mixed) events
         job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
         short_job_type += "PU"+str(args.pileup)
-    else:
+    elif args.pileup:
         warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
+    elif args.recSlidingWindow:
+        job_type += '/eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold) + '/'
+        short_job_type += '_eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold)
+    elif args.recTopoClusters:
+        job_type += '/' + str(args.sigma1) + str(args.sigma2) + str(args.sigma3) + '/'
+        short_job_type += '_' + str(args.sigma1) + str(args.sigma2) + str(args.sigma3)
 
     print "B field: ", magnetic_field
     print "number of events = ", num_events
@@ -458,6 +475,10 @@ if __name__=="__main__":
             common_fccsw_command += ' --pileup ' + str(args.pileup)
         if args.recPositions and args.pileup:
             common_fccsw_command += ' --prefixCollections merged '
+        if args.recSlidingWindow:
+            common_fccsw_command += ' --winEta ' + str(args.winEta) + ' --winPhi ' + str(args.winPhi) + ' --enThreshold ' + str(args.enThreshold) + ' '
+        if args.recTopoClusters:
+            common_fccsw_command += ' --sigma1 ' + str(args.sigma1) + ' --sigma2 ' + str(args.sigma2) + ' --sigma3 ' + str(args.sigma3) + ' '
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'

@@ -9,6 +9,9 @@ simparser.add_argument("--physics", action='store_true', help="Physics events")
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
 simparser.add_argument("--addPileupNoise", action='store_true', help="Add pileup noise")
 simparser.add_argument("--mu", type=int, help="Number of pileup-events", default=0)
+simparser.add_argument('--sigma1', type=int, default=4, help='Energy threshold [in number of sigmas] for seeding')
+simparser.add_argument('--sigma2', type=int, default=2, help='Energy threshold [in number of sigmas] for neighbours')
+simparser.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
 
 simargs, _ = simparser.parse_known_args()
 
@@ -21,6 +24,9 @@ output_name = 'clusters.root'
 elNoise = simargs.addElectronicsNoise
 puNoise = simargs.addPileupNoise
 puEvents = simargs.mu
+sigma1 = simargs.sigma1
+sigma2 = simargs.sigma2
+sigma3 = simargs.sigma3
 
 print "number of events = ", num_events
 print "input name: ", input_name
@@ -28,6 +34,7 @@ print "output name: ", output_name
 print "electronic noise in Barrel: ", elNoise
 print "pileup noise in Barrel: ", puNoise
 print 'assuming %i pileup events '%(puEvents)
+print 'energy thresholds for reconstruction: ', sigma1, '-', sigma2, '-', sigma3
 
 from Gaudi.Configuration import *
 ##############################################################################################################
@@ -232,9 +239,9 @@ if elNoise:
                                               # cell positions tools for all sub-systems
                                               positionsECalBarrelTool = ECalBcells,
                                               positionsHCalBarrelTool = HCalBcellVols,
-                                              seedSigma = 4,
-                                              neighbourSigma = 2,
-                                              lastNeighbourSigma = 0,
+                                              seedSigma = sigma1,
+                                              neighbourSigma = sigma2,
+                                              lastNeighbourSigma = sigma3,
                                               OutputLevel = INFO)
     createTopoClustersNoise.clusters.Path = "caloClustersBarrelNoise"
     createTopoClustersNoise.clusterCells.Path = "caloClusterBarrelNoiseCells"
@@ -347,9 +354,9 @@ if puNoise:
                                               # cell positions tools for all sub-systems
                                               positionsECalBarrelTool = ECalBcells,
                                               positionsHCalBarrelTool = HCalBcellVols,
-                                              seedSigma = 4,
-                                              neighbourSigma = 2,
-                                              lastNeighbourSigma = 0,
+                                              seedSigma = sigma1,
+                                              neighbourSigma = sigma2,
+                                              lastNeighbourSigma = sigma3,
                                               OutputLevel = DEBUG)
     createTopoClustersNoise.clusters.Path = "caloClustersBarrelNoise"
     createTopoClustersNoise.clusterCells.Path = "caloClusterBarrelNoiseCells"
@@ -405,9 +412,9 @@ createTopoClusters = CaloTopoCluster("CreateTopoClusters",
                                      # cell positions tools for all sub-systems
                                      positionsECalBarrelTool = ECalBcells,
                                      positionsHCalBarrelTool = HCalBcellVols,
-                                     seedSigma = 4,
-                                     neighbourSigma = 0,
-                                     lastNeighbourSigma = 0,
+                                     seedSigma = sigma1,
+                                     neighbourSigma = sigma2,
+                                     lastNeighbourSigma = sigma3,
                                      OutputLevel = INFO)
 createTopoClusters.clusters.Path = "caloClustersBarrel"
 createTopoClusters.clusterCells.Path = "caloClusterBarrelCells"
