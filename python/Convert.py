@@ -7,12 +7,6 @@ from ROOT import gSystem
 gSystem.Load("libCaloAnalysis")
 from ROOT import Decoder
 
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("--tracker", action='store_true', help="Convert also tracker hits")
-args, _ = parser.parse_known_args()
-convertTracker = args.tracker
-
 system_decoder = Decoder("system:4")
 ecalBarrel_decoder = Decoder("system:4,cryo:1,type:3,subtype:3,layer:8,eta:9,phi:10")
 hcalBarrel_decoder = Decoder("system:4,module:8,row:9,layer:5")
@@ -303,12 +297,12 @@ for event in intree:
             E += c.core.energy
             numHits += 1
 
-        if convertTracker:
+        if event.GetBranchStatus("TrackerPositionedHits"):
             for c in event.TrackerPositionedHits:
                 trackerBarrel_decoder.setValue(c.core.cellId)
                 trackerEndcap_decoder.setValue(c.core.cellId)
                 position = r.TVector3(c.position.x,c.position.y,c.position.z)
-              rec_ene.push_back(c.core.energy)
+                rec_ene.push_back(c.core.energy)
                 rec_eta.push_back(position.Eta())
                 rec_phi.push_back(position.Phi())
                 rec_pt.push_back(c.core.energy*position.Unit().Perp())

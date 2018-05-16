@@ -5,7 +5,7 @@ simparser.add_argument('--inName', type=str, help='Name of the input file', requ
 simparser.add_argument('--outName', type=str, help='Name of the output file', required=True)
 simparser.add_argument('-N','--numEvents',  type=int, help='Number of simulation events to run', required=True)
 simparser.add_argument('--prefixCollections', type=str, help='Prefix added to the collection names', default="")
-simparser.add_argument("--addMuons", action='store_true', help="Add tail catcher cells", default = True)
+simparser.add_argument("--addMuons", action='store_true', help="Add tail catcher cells", default = False)
 
 simargs, _ = simparser.parse_known_args()
 

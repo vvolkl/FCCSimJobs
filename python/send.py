@@ -84,6 +84,8 @@ def getJobInfo(argv):
         default_options = 'config/recSlidingWindow.py'
         if '--noise' in argv:
             job_type = "reco/slidingWindow/electronicsNoise"
+        elif '--addPileupNoise' in argv:
+            job_type = "reco/slidingWindow/pileupNoise"
         else:
             job_type = "reco/slidingWindow/noNoise"
         short_job_type = "recWin"
@@ -242,16 +244,24 @@ if __name__=="__main__":
     num_jobs = args.numJobs
     job_options = args.jobOptions
     output_path = args.output
-    if args.mergePileup:
-        job_type = "simuPU"+str(args.pileup)
-        short_job_type = "pileup"+str(args.pileup)
-        num_events = args.numEvents
-    elif args.recPositions and args.pileup:
-        job_type = "ntupPU"+str(args.pileup)+"/positions"
-        short_job_type = "recPos"+str(args.pileup)
-    elif args.pileup:
-        job_type += "PU"+str(args.pileup)
+
+    ## Use Pileup valid only in certain cases!
+    if args.addPileupNoise: # pileup is used to specify level of the pileup noise
+        job_type = job_type.replace("pileupNoise/", "pileupNoise/PU"+str(args.pileup))
         short_job_type += "PU"+str(args.pileup)
+        num_events = args.numEvents
+    elif args.mergePileup: # merge cells from simulated events
+        job_type = "simuPU"+str(args.pileup)
+        short_job_type += "PU"+str(args.pileup)
+        num_events = args.numEvents
+    elif (args.recPositions or args.recTopoClusters) and args.pileup: # if reconstruction is run on pileup (mixed) events
+        job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup))
+        short_job_type += "PU"+str(args.pileup)
+    elif args.recSlidingWindow and args.pileup: # if reconstruction is run on pileup events
+        job_type = job_type.replace("reco", "recoPU"+str(args.pileup))
+        short_job_type += "PU"+str(args.pileup)
+    else:
+        warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
 
     print "B field: ", magnetic_field
     print "number of events = ", num_events
@@ -330,7 +340,8 @@ if __name__=="__main__":
     outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
     if not sim:
-        if not args.mergePileup and args.pileup and not (args.pileup == 0):
+        # if signal events are used (simu/) or mixed pileup events (simuPU.../)
+        if not args.mergePileup and not args.addPileupNoise and args.pileup and not (args.pileup == 0):
             inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
         else:
             inputID = os.path.join(yamldir, version, job_dir, 'simu')
@@ -344,9 +355,10 @@ if __name__=="__main__":
             exit()
         if instatus < num_jobs:
             num_jobs = instatus
-            warning("Directory contains only ", instatus, " files, using all for the reconstruction")
+            warning("Directory contains only " + str(instatus) + " files, using all for the reconstruction")
+    # for the purpose of mixing pileup events all inputs must be passed to the config
+    # merging pileup events will be done randomly from a given event pool
     if args.mergePileup:
-        # merging pileup events will be done randomly from a given event pool
         all_inputs = ""
         for f in input_files:
             all_inputs += " " + f # event pool = all inputs
@@ -441,8 +453,6 @@ if __name__=="__main__":
             common_fccsw_command += ' --addElectronicsNoise'
         if args.addPileupNoise:
             common_fccsw_command += ' --addPileupNoise --mu ' + str(args.pileup)
-        if args.calibrate:
-            common_fccsw_command += ' --calibrate'
         if args.physics:
             common_fccsw_command += ' --physics'
         if '--local' in sys.argv:
@@ -451,7 +461,6 @@ if __name__=="__main__":
             common_fccsw_command += ' --pileup ' + str(args.pileup)
         if args.recPositions and args.pileup:
             common_fccsw_command += ' --prefixCollections merged '
-            common_fccsw_command += ' --addMuons False '
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
@@ -502,10 +511,7 @@ if __name__=="__main__":
             else:
                 frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         if args.recPositions:
-            if args.pileup: # in current PU simulations there are no tracker hits
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
-            else:
-                frun.write('python %s/python/Convert.py --tracker edm.root $JOBDIR/%s\n'%(current_dir,outfile))
+            frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
         elif '--recTopoClusters' in sys.argv:
             frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
