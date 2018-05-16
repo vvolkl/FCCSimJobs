@@ -62,9 +62,7 @@ ecalBarrelPileupHistName = "h_pileup_layer"
 ecalEndcapNoiseHistName = "h_elecNoise_fcc_"
 # HCAL readouts
 hcalBarrelReadoutName = "HCalBarrelReadout"
-hcalBarrelReadoutNamePhiEta = "BarHCal_Readout_phieta"
 hcalExtBarrelReadoutName = "HCalExtBarrelReadout"
-hcalExtBarrelReadoutNamePhiEta = "ExtBarHCal_Readout_phieta"
 hcalEndcapReadoutName = "HECPhiEta"
 hcalFwdReadoutName = "HFwdPhiEta"
 ##############################################################################################################
@@ -86,6 +84,10 @@ podioinput = PodioInput("in", collections = ["GenVertices",
 ##############################################################################################################
 #######                                       DIGITISATION                                       #############
 ##############################################################################################################
+from Configurables import CreateEmptyCaloCellsCollection
+createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
+createemptycells.cells.Path = "emptyCaloCells"
+
 from Configurables import CreateCaloCells
 if noise:
     from Configurables import NoiseCaloCellsFromFileTool, TubeLayerPhiEtaCaloTool
@@ -144,15 +146,19 @@ if noise:
                            ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                            ecalEndcapReadoutName = ecalEndcapReadoutName,
                            ecalFwdReadoutName = ecalFwdReadoutName,
-                           hcalBarrelReadoutName = hcalBarrelReadoutName,
-                           hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                           # hcalBarrelReadoutName = hcalBarrelReadoutName,
+                           # hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                           hcalBarrelReadoutName = "",
+                           hcalExtBarrelReadoutName = "",
                            hcalEndcapReadoutName = hcalEndcapReadoutName,
                            hcalFwdReadoutName = hcalFwdReadoutName)
     towersNoise.ecalBarrelCells.Path = "ECalBarrelCellsNoise"
     towersNoise.ecalEndcapCells.Path = "ECalEndcapCells"
     towersNoise.ecalFwdCells.Path = "ECalFwdCells"
-    towersNoise.hcalBarrelCells.Path = "HCalBarrelCells"
-    towersNoise.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+    # towersNoise.hcalBarrelCells.Path = "HCalBarrelCells"
+    # towersNoise.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+    towersNoise.hcalBarrelCells.Path = "emptyCaloCells"
+    towersNoise.hcalExtBarrelCells.Path = "emptyCaloCells"
     towersNoise.hcalEndcapCells.Path = "HCalEndcapCells"
     towersNoise.hcalFwdCells.Path = "HCalFwdCells"
     createclustersNoise = CreateCaloClustersSlidingWindow("CreateCaloClustersNoise",
@@ -172,15 +178,19 @@ towers = CaloTowerTool("towers",
                        ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                        ecalEndcapReadoutName = ecalEndcapReadoutName,
                        ecalFwdReadoutName = ecalFwdReadoutName,
-                       hcalBarrelReadoutName = hcalBarrelReadoutName,
-                       hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                       # hcalBarrelReadoutName = hcalBarrelReadoutName,
+                       # hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                       hcalBarrelReadoutName = "",
+                       hcalExtBarrelReadoutName = "",
                        hcalEndcapReadoutName = hcalEndcapReadoutName,
                        hcalFwdReadoutName = hcalFwdReadoutName)
 towers.ecalBarrelCells.Path = "ECalBarrelCells"
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "ECalFwdCells"
-towers.hcalBarrelCells.Path = "HCalBarrelCells"
-towers.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+# towers.hcalBarrelCells.Path = "HCalBarrelCells"
+# towers.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+towers.hcalBarrelCells.Path = "emptyCaloCells"
+towers.hcalExtBarrelCells.Path = "emptyCaloCells"
 towers.hcalEndcapCells.Path = "HCalEndcapCells"
 towers.hcalFwdCells.Path = "HCalFwdCells"
 
@@ -208,6 +218,7 @@ audsvc.Auditors = [chra]
 out.AuditExecute = True
 
 list_of_algorithms = [podioinput,
+                      createemptycells,
                       createclusters]
 if noise:
     list_of_algorithms += [createEcalBarrelCells, createclustersNoise]
