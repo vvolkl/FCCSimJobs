@@ -103,13 +103,14 @@ def getJobInfo(argv):
 
     elif '--recTopoClusters' in argv:
         default_options = 'config/recTopoClusters.py'
+        job_type = "ntup/topoClusters"
         if '--noise' in argv:
             job_type = "ntup/topoClusters/electronicsNoise"
         elif '--addPileupNoise' in argv:
-            job_type = "ntup/topoClusters/pileupNoise_mu100"
+            job_type = "ntup/topoClusters/pileupNoise/"
         else:
             job_type = "ntup/topoClusters/noNoise"
-        short_job_type = "recTopo"
+        short_job_type = 'recTopo'
         return default_options,job_type,short_job_type,False
 
     elif '--ntuple' in argv:
@@ -171,12 +172,10 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--mergePileup", action='store_true', help="Estimate pileup from minbias events")
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
+    # Add noise on cluster level
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
     parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
-    parser.add_argument("--calibrate", action='store_true', help="Calibrate Topo-cluster")
-
-    parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv, help='Pileup')
-
+    parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv or '--addPileupNoise' in sys.argv, help='Pileup')
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
 
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
@@ -381,8 +380,7 @@ if __name__=="__main__":
             if not ut.dir_exist(yamldir_process):
                 os.system("mkdir -p %s"%yamldir_process)
             myyaml = my.makeyaml(yamldir_process, seed)
-        
-            if not myyaml: 
+            if not myyaml:
                 print 'job %s already exists'%str(seed)
                 continue
 
@@ -401,8 +399,7 @@ if __name__=="__main__":
             infile_split = re.split(r'[_.]',infile)
             seed = infile_split[1]
             myyaml = my.makeyaml(yamldir_process, seed)
-        
-            if not myyaml: 
+            if not myyaml:
                 print 'job %s already exists'%str(seed)
                 continue
 
@@ -443,7 +440,7 @@ if __name__=="__main__":
         if args.noise:
             common_fccsw_command += ' --addElectronicsNoise'
         if args.addPileupNoise:
-            common_fccsw_command += ' --addPileupNoise'
+            common_fccsw_command += ' --addPileupNoise --mu ' + str(args.pileup)
         if args.calibrate:
             common_fccsw_command += ' --calibrate'
         if args.physics:
@@ -512,9 +509,11 @@ if __name__=="__main__":
             frun.write('rm edm.root \n')
         elif '--recTopoClusters' in sys.argv:
             frun.write('python %s/python/Convert.py $JOBDIR/clusters.root $JOBDIR/%s\n'%(current_dir,outfile))
-            if '--calibrate' in sys.argv:
-                frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s_calibHistos.root\n'%( outdir+'/'+outfile ))
-                frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+            reco_path = outdir.replace('/ntup/', '/reco/')
+            if not ut.dir_exist(reco_path):
+                os.system("mkdir -p %s"%(reco_path))
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s\n'%(reco_path+'/'+outfile))
 
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
