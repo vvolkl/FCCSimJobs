@@ -179,8 +179,8 @@ towers = CaloTowerTool("towers",
 towers.ecalBarrelCells.Path = "ECalBarrelCells"
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "ECalFwdCells"
-towersNoiseP.hcalBarrelCells.Path = "HCalBarrelCells"
-towersNoiseP.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+towers.hcalBarrelCells.Path = "HCalBarrelCells"
+towers.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
 towers.hcalEndcapCells.Path = "HCalEndcapCells"
 towers.hcalFwdCells.Path = "HCalFwdCells"
 
