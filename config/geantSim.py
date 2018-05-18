@@ -185,7 +185,7 @@ else:
     pythia8gen = GenAlg("Pythia8", SignalProvider=pythia8gentool, VertexSmearingTool=smeartool)
     pythia8gen.hepmc.Path = "hepmc"
     from Configurables import HepMCToEDMConverter
-    hepmc_converter = HepMCToEDMConverter("Converter")
+    hepmc_converter = HepMCToEDMConverter("Converter", hepmcStatusList=[]) # save all the particles from Pythia
     hepmc_converter.hepmc.Path="hepmc"
     hepmc_converter.genparticles.Path="allGenParticles"
     hepmc_converter.genvertices.Path="GenVertices"

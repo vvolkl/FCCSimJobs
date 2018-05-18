@@ -10,6 +10,7 @@ simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add e
 simparser.add_argument('--winEta', type=int, default=7, help='Size of the final cluster in eta')
 simparser.add_argument('--winPhi', type=int, default=19, help='Size of the final cluster in phi')
 simparser.add_argument('--enThreshold', type=float, default=3., help='Energy threshold of the seeding clusters [GeV]')
+simparser.add_argument('--mu', type=int, default=1000, help='Pileup scenario')
 
 simargs, _ = simparser.parse_known_args()
 
@@ -24,6 +25,7 @@ path_to_detector = simargs.detectorPath
 winEta = simargs.winEta
 winPhi = simargs.winPhi
 enThreshold = simargs.enThreshold
+pileup = simargs.mu
 print "number of events = ", num_events
 print "input name: ", input_name
 print "output name: ", output_name
@@ -32,6 +34,7 @@ print "detectors are taken from: ", path_to_detector
 print "final cluster eta size: ", winEta
 print "final cluster phi size: ", winPhi
 print "energy threshold for seeding cluster [GeV]: ", enThreshold
+print "pileup scenario: <mu> = ", pileup
 
 from Gaudi.Configuration import *
 ##############################################################################################################
@@ -40,8 +43,8 @@ from Gaudi.Configuration import *
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
                   path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
+                  # path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
+                  # path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
                   path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
@@ -57,6 +60,7 @@ ecalEndcapReadoutName = "EMECPhiEtaReco"
 ecalFwdReadoutName = "EMFwdPhiEta"
 ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
 ecalEndcapNoisePath = "/afs/cern.ch/user/n/novaj/public/elecNoise_emec_6layers.root"
+ecalBarrelPileupNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_pileup_cluster.root"
 ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
 ecalBarrelPileupHistName = "h_pileup_layer"
 ecalEndcapNoiseHistName = "h_elecNoise_fcc_"
@@ -76,8 +80,8 @@ podioinput = PodioInput("in", collections = ["GenVertices",
                                              "ECalBarrelCells",
                                              "ECalEndcapCells",
                                              "ECalFwdCells",
-                                             "HCalBarrelCells",
-                                             "HCalExtBarrelCells",
+                                             # "HCalBarrelCells",
+                                             # "HCalExtBarrelCells",
                                              "HCalEndcapCells",
                                              "HCalFwdCells"])
 
@@ -169,6 +173,19 @@ if noise:
                                                      nEtaFinal = winEta, nPhiFinal = winPhi,
                                                      energyThreshold = enThreshold)
     createclustersNoise.clusters.Path = "caloClustersNoise"
+    from Configurables import CorrectCluster
+    correctClusters = CorrectCluster("CorrectCluster",
+                                     energyAxis = energy,
+                                     numLayers = 8,
+                                     etaValues = [0,0.25],
+                                     presamplerShiftP0 = [0.05938, 0.05938],
+                                     presamplerShiftP1 = [0.0001833,0.0001833],
+                                     presamplerScaleP0  = [2.4, 2.4],
+                                     presamplerScaleP1  = [-0.006838, -0.006838],
+                                     mu = pileup,
+                                     noiseFileName = ecalBarrelPileupNoisePath)
+    correctClusters.clusters.Path = "caloClustersNoise",
+    correctClusters.correctedClusters.Path = "caloClustersCorrected"
 
 #Create calo clusters
 from Configurables import CreateCaloClustersSlidingWindow, CaloTowerTool
@@ -203,12 +220,18 @@ createclusters = CreateCaloClustersSlidingWindow("CreateCaloClusters",
                                                  energyThreshold = enThreshold)
 createclusters.clusters.Path = "caloClusters"
 
-
 # PODIO algorithm
 from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
 out = PodioOutput("out")
 out.outputCommands = ["keep *"]
 out.filename = output_name
+
+THistSvc().Output = ["rec DATAFILE='hist_"+output_name+"' TYP='ROOT' OPT='RECREATE'"]
+THistSvc().PrintAll=True
+THistSvc().AutoSave=True
+THistSvc().AutoFlush=False
+THistSvc().OutputLevel=INFO
+
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -221,7 +244,7 @@ list_of_algorithms = [podioinput,
                       createemptycells,
                       createclusters]
 if noise:
-    list_of_algorithms += [createEcalBarrelCells, createclustersNoise]
+    list_of_algorithms += [createEcalBarrelCells, createclustersNoise, correctedClustersNoise]
 
 list_of_algorithms += [out]
 

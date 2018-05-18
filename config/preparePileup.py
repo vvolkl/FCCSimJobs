@@ -83,7 +83,7 @@ pileupEcalBarrel = PreparePileup("PreparePileupEcalBarrel",
                                  histogramName = "ecalBarrelEnergyVsAbsEta",
                                  numLayers = 8,
                                  etaSize = [7,  5,  7,   9,    3,      3],
-                                 phiSize = [17,15, 21, 21,  15,  11])
+                                 phiSize = [19,15, 21, 21,  15,  11])
 pileupEcalBarrel.hits.Path="ECalBarrelCells"
 
 THistSvc().Output = ["rec DATAFILE='" + output_name + "' TYP='ROOT' OPT='RECREATE'"]

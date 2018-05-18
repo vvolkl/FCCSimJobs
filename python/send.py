@@ -270,7 +270,7 @@ if __name__=="__main__":
         short_job_type += "PU"+str(args.pileup)
     elif args.pileup:
         warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
-    elif args.recSlidingWindow:
+    if args.recSlidingWindow:
         job_type += '/eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold) + '/'
         short_job_type += '_eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold)
     elif args.recTopoClusters:
@@ -537,6 +537,11 @@ if __name__=="__main__":
             if not ut.dir_exist(ntup_path):
                 os.system("mkdir -p %s"%(ntup_path))
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s/%s\n'%(ntup_path, outfile))
+            if '--recSlidingWindow' in sys.argv:
+                analysis_path = outdir.replace('/reco', '/ana')
+                if not ut.dir_exist(analysis_path):
+                    os.system("mkdir -p %s"%(analysis_path))
+                frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/hist_%s %s\n'%(outfile, analysis_path))
 
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
