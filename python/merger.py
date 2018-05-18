@@ -47,7 +47,11 @@ class merger():
                 
                 with open(f, 'r') as stream:
                     try:
-                        tmpf = yaml.load(stream)
+                        tmpf = yaml.load(stream) 
+                        if ut.getsize(f)==0: 
+                            os.system("rm %s"%(f))
+                            continue
+                        if ut.getsize(f)==0: continue
                         if tmpf['processing']['status']=='sending': continue
                         if tmpf['processing']['status']=='BAD':
                             nbad+=1
