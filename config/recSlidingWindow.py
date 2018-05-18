@@ -4,8 +4,13 @@ simparser = argparse.ArgumentParser()
 simparser.add_argument('--inName', type=str, help='Name of the input file', required=True)
 simparser.add_argument('--outName', type=str, help='Name of the output file', required=True)
 simparser.add_argument('-N','--numEvents', type=int, help='Number of simulation events to run', required=True)
+simparser.add_argument('--detectorPath', type=str, help='Path to detectors', default = "/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj")
 
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
+simparser.add_argument('--winEta', type=int, default=7, help='Size of the final cluster in eta')
+simparser.add_argument('--winPhi', type=int, default=19, help='Size of the final cluster in phi')
+simparser.add_argument('--enThreshold', type=float, default=3., help='Energy threshold of the seeding clusters [GeV]')
+simparser.add_argument('--mu', type=int, default=1000, help='Pileup scenario')
 
 simargs, _ = simparser.parse_known_args()
 
@@ -16,24 +21,32 @@ num_events = simargs.numEvents
 input_name = simargs.inName
 output_name = simargs.outName
 noise = simargs.addElectronicsNoise
+path_to_detector = simargs.detectorPath
+winEta = simargs.winEta
+winPhi = simargs.winPhi
+enThreshold = simargs.enThreshold
+pileup = simargs.mu
 print "number of events = ", num_events
 print "input name: ", input_name
 print "output name: ", output_name
 print "electronic noise in ECAL: ", noise
+print "detectors are taken from: ", path_to_detector
+print "final cluster eta size: ", winEta
+print "final cluster phi size: ", winPhi
+print "energy threshold for seeding cluster [GeV]: ", enThreshold
+print "pileup scenario: <mu> = ", pileup
 
 from Gaudi.Configuration import *
 ##############################################################################################################
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
-path_to_detector = '/afs/cern.ch/user/a/azaborow/public/FCCSW/'
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
                   path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
+                  # path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
+                  # path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
                   path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
-                  path_to_detector+'/Detector/DetFCChhTailCatcher/compact/FCChh_TailCatcher.xml',
                   path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
                   path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
 
@@ -43,17 +56,17 @@ geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use)
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEta"
+ecalEndcapReadoutName = "EMECPhiEtaReco"
 ecalFwdReadoutName = "EMFwdPhiEta"
-ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth.root"
-ecalEndcapNoisePath = "/afs/cern.ch/user/n/novaj/public/elecNoise_sfcorrection_50Ohm_EMEC_1stdisc.root"
+ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
+ecalEndcapNoisePath = "/afs/cern.ch/user/n/novaj/public/elecNoise_emec_6layers.root"
+ecalBarrelPileupNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_pileup_cluster.root"
 ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
-ecalEndcapNoiseHistName = "h_elecNoise_withoutTraceCap"
+ecalBarrelPileupHistName = "h_pileup_layer"
+ecalEndcapNoiseHistName = "h_elecNoise_fcc_"
 # HCAL readouts
-hcalBarrelReadoutName = "BarHCal_Readout"
-hcalBarrelReadoutNamePhiEta = hcalBarrelReadoutName + "_phieta"
-hcalExtBarrelReadoutName = "ExtBarHCal_Readout"
-hcalExtBarrelReadoutNamePhiEta = hcalExtBarrelReadoutName + "_phieta"
+hcalBarrelReadoutName = "HCalBarrelReadout"
+hcalExtBarrelReadoutName = "HCalExtBarrelReadout"
 hcalEndcapReadoutName = "HECPhiEta"
 hcalFwdReadoutName = "HFwdPhiEta"
 ##############################################################################################################
@@ -67,19 +80,21 @@ podioinput = PodioInput("in", collections = ["GenVertices",
                                              "ECalBarrelCells",
                                              "ECalEndcapCells",
                                              "ECalFwdCells",
-                                             "HCalBarrelCells",
-                                             "HCalExtBarrelCells",
+                                             # "HCalBarrelCells",
+                                             # "HCalExtBarrelCells",
                                              "HCalEndcapCells",
-                                             "HCalFwdCells",
-                                             "TailCatcherCells"])
+                                             "HCalFwdCells"])
 
 ##############################################################################################################
 #######                                       DIGITISATION                                       #############
 ##############################################################################################################
+from Configurables import CreateEmptyCaloCellsCollection
+createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
+createemptycells.cells.Path = "emptyCaloCells"
+
 from Configurables import CreateCaloCells
 if noise:
     from Configurables import NoiseCaloCellsFromFileTool, TubeLayerPhiEtaCaloTool
-    
 # 1. ECAL BARREL
 if noise:
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
@@ -105,6 +120,28 @@ if noise:
                                             noiseTool = noiseBarrel,
                                             hits="ECalBarrelCells",
                                             cells="ECalBarrelCellsNoise")
+    # noiseEndcap = NoiseCaloCellsFromFileTool("NoiseEndcap",
+    #                                          readoutName = ecalEndcapReadoutName,
+    #                                          noiseFileName = ecalEndcapNoisePath,
+    #                                          elecNoiseHistoName = ecalEndcapNoiseHistName,
+    #                                          activeFieldName = "layer",
+    #                                          addPileup = False,
+    #                                          numRadialLayers = 40,
+    #                                          noiseCells = "ECalEndcapElNoiseOnlyCells")
+    # endcapGeometry = TubeLayerPhiEtaCaloTool("EcalEndcapGeo",
+    #                                          readoutName = ecalEndcapReadoutName,
+    #                                          activeVolumeName = "layerEnvelope",
+    #                                          activeFieldName = "layer",
+    #                                          activeVolumesNumber = 40,
+    #                                          fieldNames = ["system"],
+    #                                          fieldValues = [6])
+    # createEcalEndcapCells = CreateCaloCells("CreateECalEndcapCells",
+    #                                         geometryTool = endcapGeometry,
+    #                                         doCellCalibration=False, # already calibrated
+    #                                         addCellNoise=True, filterCellNoise=False,
+    #                                         noiseTool = noiseEndcap,
+    #                                         hits="ECalEndcapCells",
+    #                                         cells="ECalEndcapCellsNoise")
     #Create calo clusters
     from Configurables import CreateCaloClustersSlidingWindow, CaloTowerTool
     from GaudiKernel.PhysicalConstants import pi
@@ -113,15 +150,19 @@ if noise:
                            ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                            ecalEndcapReadoutName = ecalEndcapReadoutName,
                            ecalFwdReadoutName = ecalFwdReadoutName,
-                           hcalBarrelReadoutName = hcalBarrelReadoutName,
-                           hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                           # hcalBarrelReadoutName = hcalBarrelReadoutName,
+                           # hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                           hcalBarrelReadoutName = "",
+                           hcalExtBarrelReadoutName = "",
                            hcalEndcapReadoutName = hcalEndcapReadoutName,
                            hcalFwdReadoutName = hcalFwdReadoutName)
     towersNoise.ecalBarrelCells.Path = "ECalBarrelCellsNoise"
     towersNoise.ecalEndcapCells.Path = "ECalEndcapCells"
     towersNoise.ecalFwdCells.Path = "ECalFwdCells"
-    towersNoise.hcalBarrelCells.Path = "HCalBarrelCells"
-    towersNoise.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+    # towersNoise.hcalBarrelCells.Path = "HCalBarrelCells"
+    # towersNoise.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+    towersNoise.hcalBarrelCells.Path = "emptyCaloCells"
+    towersNoise.hcalExtBarrelCells.Path = "emptyCaloCells"
     towersNoise.hcalEndcapCells.Path = "HCalEndcapCells"
     towersNoise.hcalFwdCells.Path = "HCalFwdCells"
     createclustersNoise = CreateCaloClustersSlidingWindow("CreateCaloClustersNoise",
@@ -129,9 +170,22 @@ if noise:
                                                      nEtaWindow = 7, nPhiWindow = 15,
                                                      nEtaPosition = 3, nPhiPosition = 11,
                                                      nEtaDuplicates = 5, nPhiDuplicates = 11,
-                                                     nEtaFinal = 7, nPhiFinal = 17,
-                                                     energyThreshold = 3)
+                                                     nEtaFinal = winEta, nPhiFinal = winPhi,
+                                                     energyThreshold = enThreshold)
     createclustersNoise.clusters.Path = "caloClustersNoise"
+    from Configurables import CorrectCluster
+    correctClusters = CorrectCluster("CorrectCluster",
+                                     energyAxis = energy,
+                                     numLayers = 8,
+                                     etaValues = [0,0.25],
+                                     presamplerShiftP0 = [0.05938, 0.05938],
+                                     presamplerShiftP1 = [0.0001833,0.0001833],
+                                     presamplerScaleP0  = [2.4, 2.4],
+                                     presamplerScaleP1  = [-0.006838, -0.006838],
+                                     mu = pileup,
+                                     noiseFileName = ecalBarrelPileupNoisePath)
+    correctClusters.clusters.Path = "caloClustersNoise",
+    correctClusters.correctedClusters.Path = "caloClustersCorrected"
 
 #Create calo clusters
 from Configurables import CreateCaloClustersSlidingWindow, CaloTowerTool
@@ -141,15 +195,19 @@ towers = CaloTowerTool("towers",
                        ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                        ecalEndcapReadoutName = ecalEndcapReadoutName,
                        ecalFwdReadoutName = ecalFwdReadoutName,
-                       hcalBarrelReadoutName = hcalBarrelReadoutName,
-                       hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                       # hcalBarrelReadoutName = hcalBarrelReadoutName,
+                       # hcalExtBarrelReadoutName = hcalExtBarrelReadoutName,
+                       hcalBarrelReadoutName = "",
+                       hcalExtBarrelReadoutName = "",
                        hcalEndcapReadoutName = hcalEndcapReadoutName,
                        hcalFwdReadoutName = hcalFwdReadoutName)
 towers.ecalBarrelCells.Path = "ECalBarrelCells"
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "ECalFwdCells"
-towers.hcalBarrelCells.Path = "HCalBarrelCells"
-towers.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+# towers.hcalBarrelCells.Path = "HCalBarrelCells"
+# towers.hcalExtBarrelCells.Path = "HCalExtBarrelCells"
+towers.hcalBarrelCells.Path = "emptyCaloCells"
+towers.hcalExtBarrelCells.Path = "emptyCaloCells"
 towers.hcalEndcapCells.Path = "HCalEndcapCells"
 towers.hcalFwdCells.Path = "HCalFwdCells"
 
@@ -158,23 +216,22 @@ createclusters = CreateCaloClustersSlidingWindow("CreateCaloClusters",
                                                  nEtaWindow = 7, nPhiWindow = 15,
                                                  nEtaPosition = 3, nPhiPosition = 11,
                                                  nEtaDuplicates = 5, nPhiDuplicates = 11,
-                                                 nEtaFinal = 7, nPhiFinal = 17,
-                                                 energyThreshold = 3)
+                                                 nEtaFinal = winEta, nPhiFinal = winPhi,
+                                                 energyThreshold = enThreshold)
 createclusters.clusters.Path = "caloClusters"
 
 # PODIO algorithm
 from Configurables import ApplicationMgr, FCCDataSvc, PodioOutput
 out = PodioOutput("out")
-out.outputCommands = ["drop *",
-                      "keep GenVertices",
-                      "keep GenParticles",
-                      "keep ECalBarrelCells",
-                      "keep ECalEndcapCells",
-                      "keep ECalFwdCells",
-                      "keep caloClusters"]
-if noise:
-    out.outputCommands += ["keep ECalBarrelCellsNoise", "keep caloClustersNoise"]
+out.outputCommands = ["keep *"]
 out.filename = output_name
+
+THistSvc().Output = ["rec DATAFILE='hist_"+output_name+"' TYP='ROOT' OPT='RECREATE'"]
+THistSvc().PrintAll=True
+THistSvc().AutoSave=True
+THistSvc().AutoFlush=False
+THistSvc().OutputLevel=INFO
+
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -184,9 +241,10 @@ audsvc.Auditors = [chra]
 out.AuditExecute = True
 
 list_of_algorithms = [podioinput,
+                      createemptycells,
                       createclusters]
 if noise:
-    list_of_algorithms += [createEcalBarrelCells, createclustersNoise]
+    list_of_algorithms += [createEcalBarrelCells, createclustersNoise, correctedClustersNoise]
 
 list_of_algorithms += [out]
 

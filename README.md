@@ -97,11 +97,31 @@ python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --l
 
 ```
 - to add electronics noise in the reconstruction step, add **--noise**
-- to include pileup noise, add **--addPileupNoise** and specify the pileup configuration with **-mu** (choose from: 100, 200, 500 or 1000) 
+- to include pileup noise, add **--addPileupNoise** and specify the pileup configuration with **--pileup** (choose from: 100, 200, 500 or 1000) 
 ```
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
 ```
+
+Pileup
+==============
+
+There are several approaches of addressing the pile-up in the detector:
+
+1. Apply noise in the detector that represents the noise introduced by the simultanous collisions. The offset in the energy deposit is assumed to be corrected for.
+
+- estimation of the pile-up noise per cell and per cluster (only in ECal detector at the moment) can be done using **--estimatePileup** job option.
+  It creates histograms filling in the information on the deposits per event. This can be later scaled with *sqrt(mu)* for the noise (RMS of the energy distributions) and with *mu* for the mean energy deposit.
+  Detailed analysis and this scaling is done with FCC_calo_analysis_cpp toolkit.
+
+- apply estimated noise levels at the cluster level for sliding window reconstruction or layer by layer for the topological clusters (**--addPileupNoise**).
+
+2. Mix already simulated events in order to overlay:
+
+- cells that are later passed to the reconstruction (**--mergePileup**)
+
+- or clusters that can be directly analysed (not yet supported)
+
 
 Miscellaneous
 ==============
@@ -150,4 +170,18 @@ python python/run.py --cleanold --version v03
 make the web page
 ```
 python python/run.py --web --version v03
+```
+
+
+
+WARNING
+===========
+
+Official installation of FCCSW does not support certain options (not yet in the release). Please check the following list for the recommended versions:
+
+```
+--mergePileup --local inits/pileup.py
+--estimatePileup --local inits/pileup.py
+--recPositions --local inits/reco.py
+--recTopoClusters --local inits/reco.py
 ```
