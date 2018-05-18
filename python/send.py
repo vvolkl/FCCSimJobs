@@ -258,7 +258,7 @@ if __name__=="__main__":
 
     ## Use Pileup valid only in certain cases!
     if args.addPileupNoise: # pileup is used to specify level of the pileup noise
-        job_type = job_type.replace("pileupNoise/", "pileupNoise/PU"+str(args.pileup))
+        job_type = job_type.replace("pileupNoise", "pileupNoise/PU"+str(args.pileup))
         short_job_type += "PU"+str(args.pileup)
         num_events = args.numEvents
     elif args.mergePileup: # merge cells from simulated events
@@ -531,13 +531,13 @@ if __name__=="__main__":
         if args.recPositions:
             frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
-        elif '--recTopoClusters' in sys.argv or '--recSlidingWindow' in sys.argv:
+        elif args.recTopoClusters or args.recSlidingWindow:
             frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters.root\n'%(current_dir,outfile))
             ntup_path = outdir.replace('/reco', '/ntup')
             if not ut.dir_exist(ntup_path):
                 os.system("mkdir -p %s"%(ntup_path))
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters.root %s/%s\n'%(ntup_path, outfile))
-            if '--recSlidingWindow' in sys.argv:
+            if args.recSlidingWindow:
                 analysis_path = outdir.replace('/reco', '/ana')
                 if not ut.dir_exist(analysis_path):
                     os.system("mkdir -p %s"%(analysis_path))
