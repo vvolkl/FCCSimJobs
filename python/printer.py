@@ -4,7 +4,7 @@ import re
 import yaml
 import utils as ut
 import users as us
-
+import glob
 class printer():
 
 #__________________________________________________________
@@ -60,7 +60,7 @@ class printer():
             nfileseos=0
             if files_tot+bad_tot!=0:
                 if ut.dir_exist('%s%s'%(self.eosdir,process)):
-                    nfileseos=len(os.listdir('%s%s'%(self.eosdir,process)))
+                    nfileseos=len(glob.glob('%s%s/output*'%(self.eosdir,process)))
     
             print 'nevents               : %i'%events_tot
             print 'nfiles on eos/checked good/checked bad : %i/%i/%i'%(nfileseos,files_tot,bad_tot)
