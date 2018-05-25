@@ -77,7 +77,7 @@ geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use)
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEtaReco"
+ecalEndcapReadoutName = "EMECPhiEta"
 ecalFwdReadoutName = "EMFwdPhiEta"
 ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
 ecalEndcapNoisePath = "/afs/cern.ch/user/n/novaj/public/elecNoise_emec_6layers.root"
@@ -216,7 +216,7 @@ if noise:
     from Configurables import CreateCaloClustersSlidingWindow, CaloTowerTool
     from GaudiKernel.PhysicalConstants import pi
     towersNoise = CaloTowerTool("towersNoise",
-                           deltaEtaTower = 0.01, deltaPhiTower = 2*pi/704.,
+                           deltaEtaTower = 0.01, deltaPhiTower = 2*pi/256.,
                            ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                            ecalEndcapReadoutName = ecalEndcapReadoutName,
                            ecalFwdReadoutName = ecalFwdReadoutName,
@@ -278,7 +278,7 @@ outhits = "newHCalExtBarrelCells")
 from Configurables import CreateCaloClustersSlidingWindow, CaloTowerTool
 from GaudiKernel.PhysicalConstants import pi
 towers = CaloTowerTool("towers",
-                       deltaEtaTower = 0.01, deltaPhiTower = 2*pi/704.,
+                       deltaEtaTower = 0.01, deltaPhiTower = 2*pi/256.,
                        ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
                        ecalEndcapReadoutName = ecalEndcapReadoutName,
                        ecalFwdReadoutName = ecalFwdReadoutName,
@@ -286,7 +286,7 @@ towers = CaloTowerTool("towers",
                        hcalExtBarrelReadoutName = hcalExtBarrelPhiEtaReadoutName,
                        hcalEndcapReadoutName = hcalEndcapReadoutName,
                        hcalFwdReadoutName = hcalFwdReadoutName,
-                       OutputLevel=DEBUG)
+                       OutputLevel=INFO)
 towers.ecalBarrelCells.Path = "ECalBarrelCells"
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "ECalFwdCells"
@@ -302,7 +302,7 @@ createclusters = CreateCaloClustersSlidingWindow("CreateCaloClusters",
                                                  nEtaDuplicates = winEtaDup, nPhiDuplicates = winPhiDup,
                                                  nEtaFinal = winEta, nPhiFinal = winPhi,
                                                  energyThreshold = enThreshold,
-                                                 OutputLevel=DEBUG)
+                                                 OutputLevel=INFO)
 createclusters.clusters.Path = "caloClusters"
 
 # PODIO algorithm
