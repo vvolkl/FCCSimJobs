@@ -44,7 +44,7 @@ pileup = simargs.mu
 print "number of events = ", num_events
 print "input name: ", input_name
 print "output name: ", output_name
-print "electronic noise in ECAL: ", noise
+print "electronic noise in E and HCAL: ", noise
 print "detectors are taken from: ", path_to_detector
 print "cluster eta size: ", winEta
 print "cluster phi size: ", winPhi
@@ -64,12 +64,14 @@ from Gaudi.Configuration import *
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
                   path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
                   path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
-                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
-                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
-                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
+                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml']
+if not noise:
+    detectors_to_use += [path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml']
+    
+detectors_to_use += [path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
+                     path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
+                     path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
+                     path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
 
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use)
@@ -202,7 +204,7 @@ if noise:
     from Configurables import RedoSegmentation
     resegmentHcalNoise = RedoSegmentation("ReSegmentationHcalNoise",
                                           # old bitfield (readout)
-                                     oldReadoutName = hcalBarrelReadoutName,
+                                          oldReadoutName = hcalBarrelReadoutName,
                                           # # specify which fields are going to be altered (deleted/rewritten)
                                           # oldSegmentationIds = ["eta","phi"],
                                           # new bitfield (readout), with new segmentation
@@ -238,7 +240,7 @@ if noise:
                                                           nEtaDuplicates = winEtaDup, nPhiDuplicates = winPhiDup,
                                                           nEtaFinal = winEta, nPhiFinal = winPhi,
                                                           energyThreshold = enThreshold,
-                                                          OutputLevel = DEBUG)
+                                                          OutputLevel = INFO)
     createclustersNoise.clusters.Path = "caloClustersNoise"
 
 # additionally for HCal
