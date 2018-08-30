@@ -611,8 +611,8 @@ if __name__=="__main__":
                 frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s\n'%( ana_path+'/'+outfile ))
                 frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
         if not args.no_eoscopy:
-          frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-          
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
+            
         frun.write('rm $JOBDIR/%s \n'%(outfile))
         frun.close()
 

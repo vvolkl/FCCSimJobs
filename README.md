@@ -127,7 +127,12 @@ There are several approaches of addressing the pile-up in the detector:
 2.1.2 merge signal and PU events that are later passed to the reconstruction (**--addPileupToSignal**)
 ```
 python python/send.py --singlePart --particle -211 -e 10 --addPileupToSignal --pileup 200 --local inits/pileup.py -N 1 --lsf
+=======
 ```
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
+```
+
 
 Miscellaneous
 ==============
@@ -177,7 +182,6 @@ make the web page
 ```
 python python/run.py --web --version v03
 ```
-
 
 
 WARNING

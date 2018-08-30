@@ -95,7 +95,7 @@ geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use)
 # ECAL readouts
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
-ecalEndcapReadoutName = "EMECPhiEta"
+ecalEndcapReadoutName = "EMECPhiEtaReco"
 ecalFwdReadoutName = "EMFwdPhiEta"
 ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
 ecalEndcapNoisePath = "/afs/cern.ch/user/n/novaj/public/elecNoise_emec_6layers.root"
@@ -128,8 +128,8 @@ podioinput = PodioInput("in", collections = ["GenVertices",
                                              "ECalBarrelCells",
                                              "ECalEndcapCells",
                                              "ECalFwdCells",
-                                             "HCalBarrelCells",
-                                             "HCalExtBarrelCells",
+                                             # "HCalBarrelCells",
+                                             # "HCalExtBarrelCells",
                                              "HCalEndcapCells",
                                              "HCalFwdCells"])
 
@@ -232,6 +232,19 @@ if noise:
                                                           nEtaFinal = winEta, nPhiFinal = winPhi,
                                                           energyThreshold = enThreshold)
     createclustersNoise.clusters.Path = "caloClustersNoise"
+    from Configurables import CorrectCluster
+    correctClusters = CorrectCluster("CorrectCluster",
+                                     energyAxis = energy,
+                                     numLayers = 8,
+                                     etaValues = [0,0.25],
+                                     presamplerShiftP0 = [0.05938, 0.05938],
+                                     presamplerShiftP1 = [0.0001833,0.0001833],
+                                     presamplerScaleP0  = [2.4, 2.4],
+                                     presamplerScaleP1  = [-0.006838, -0.006838],
+                                     mu = pileup,
+                                     noiseFileName = ecalBarrelPileupNoisePath)
+    correctClusters.clusters.Path = "caloClustersNoise",
+    correctClusters.correctedClusters.Path = "caloClustersCorrected"
 
 # additionally for HCal
 from Configurables import CreateVolumeCaloPositions
