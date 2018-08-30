@@ -125,8 +125,6 @@ There are several approaches of addressing the pile-up in the detector:
 2.1.2 merge signal and PU events that are later passed to the reconstruction (**--addPileupToSignal**)
 ```
 python python/send.py --singlePart --particle -211 -e 10 --addPileupToSignal --pileup 200 --local inits/pileup.py -N 1 --lsf
-=======
-```
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
 python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
 ```
@@ -134,6 +132,7 @@ python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --l
 
 Miscellaneous
 ==============
+
 Formatting rules:
 - The directory names are used to identify their content. Please make sure that their are:
   - only root files with **edm classes** in /simu/ and /reco/
@@ -151,6 +150,7 @@ This is something that can not be done centrally yet as I do not have rights to 
 
 Expert mode
 ===========
+
 check for a given process
 ```
 python python/run.py --check --version v03 --process physics/MinBias/bFieldOn/etaFull/simu
