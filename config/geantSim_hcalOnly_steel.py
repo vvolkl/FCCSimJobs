@@ -77,15 +77,16 @@ from GaudiKernel import SystemOfUnits as units
 #######                                         GEOMETRY                                         #############
 ##############################################################################################################
 detectors_to_use=[path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_DectEmptyMaster.xml',
-                  path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
-                  path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedBarrel_TileCal.xml',
-                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
-                  path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
-                  path_to_detector+'/Detector/DetFCChhTailCatcher/compact/FCChh_TailCatcher.xml',
-                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
-                  path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml']
+                  #path_to_detector+'/Detector/DetFCChhTrackerTkLayout/compact/Tracker.xml',
+                 # path_to_detector+'/Detector/DetFCChhECalInclined/compact/FCChh_ECalBarrel_withCryostat.xml',
+                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalSteelBarrel_TileCal.xml',
+                  path_to_detector+'/Detector/DetFCChhHCalTile/compact/FCChh_HCalExtendedSteelBarrel_TileCal.xml',
+                  #path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Endcaps_coneCryo.xml',
+                  #path_to_detector+'/Detector/DetFCChhCalDiscs/compact/Forward_coneCryo.xml',
+                   path_to_detector+'/Detector/DetFCChhTailCatcher/compact/FCChh_TailCatcher.xml'
+                  # path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Solenoids.xml',
+                  #path_to_detector+'/Detector/DetFCChhBaseline1/compact/FCChh_Shielding.xml'
+                  ]
 
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc", detectors = detectors_to_use, OutputLevel = WARNING)
@@ -141,7 +142,7 @@ saveecaltool.caloHits.Path = "ECalBarrelHits"
 savehcaltool = SimG4SaveCalHits("saveHCalBarrelHits",readoutNames = [hcalBarrelReadoutName])
 savehcaltool.positionedCaloHits.Path = "HCalBarrelPositionedHits"
 savehcaltool.caloHits.Path = "HCalBarrelHits"
-outputHitsTools = ["SimG4SaveCalHits/saveECalBarrelHits", "SimG4SaveCalHits/saveHCalBarrelHits"]
+outputHitsTools = ["SimG4SaveCalHits/saveHCalBarrelHits"]
 saveexthcaltool = SimG4SaveCalHits("saveHCalExtBarrelHits",readoutNames = [hcalExtBarrelReadoutName])
 saveexthcaltool.positionedCaloHits.Path = "HCalExtBarrelPositionedHits"
 saveexthcaltool.caloHits.Path = "HCalExtBarrelHits"
@@ -160,9 +161,9 @@ savehcalfwdtool.caloHits.Path = "HCalFwdHits"
 savetailcatchertool = SimG4SaveCalHits("saveTailCatcherHits", readoutNames = [tailCatcherReadoutName])
 savetailcatchertool.positionedCaloHits = "TailCatcherPositionedHits"
 savetailcatchertool.caloHits = "TailCatcherHits"
-outputHitsTools += ["SimG4SaveCalHits/saveECalEndcapHits","SimG4SaveCalHits/saveECalFwdHits",
-                    "SimG4SaveCalHits/saveHCalExtBarrelHits", "SimG4SaveCalHits/saveHCalEndcapHits",
-                    "SimG4SaveCalHits/saveHCalFwdHits", "SimG4SaveCalHits/saveTailCatcherHits", "SimG4SaveTrackerHits/saveTrackerHits"]
+outputHitsTools += [
+    "SimG4SaveCalHits/saveHCalExtBarrelHits",
+    "SimG4SaveCalHits/saveTailCatcherHits"]
 
 geantsim = SimG4Alg("SimG4Alg", outputs = outputHitsTools)
 
@@ -212,7 +213,7 @@ calibEcalBarrel = CalibrateInLayersTool("CalibrateEcalBarrel",
                                         samplingFraction = [0.299041341789] + [0.1306220735]+ [0.163243999965]  + [0.186360269398] + [0.203778124831] + [0.216211280314] + [0.227140796653] + [0.243315422934],
                                         readoutName = ecalBarrelReadoutName,
                                         layerFieldName = "layer")
-calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66")
+calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="34.48") # to hadronic scale for full Steel option 2.9%
 calibEcalEndcap = CalibrateCaloHitsTool("CalibrateECalEndcap", invSamplingFraction="13.89")
 calibEcalFwd = CalibrateCaloHitsTool("CalibrateECalFwd", invSamplingFraction="303.03")
 calibHcalEndcap = CalibrateCaloHitsTool("CalibrateHCalEndcap", invSamplingFraction="33.62")
@@ -369,18 +370,18 @@ createTailCatcherCells.AuditExecute = True
 out.AuditExecute = True
 
 list_of_algorithms = [geantsim,
-                      createEcalBarrelCellsStep1,
-                      positionsEcalBarrel,
-                      resegmentEcalBarrel,
-                      createEcalBarrelCells,
+#                      createEcalBarrelCellsStep1,
+#                      positionsEcalBarrel,
+#                      resegmentEcalBarrel,
+#                      createEcalBarrelCells,
                       createHcalCells,
-                      mergeLayersEcalEndcap,
-                      createEcalEndcapCells,
-                      createEcalFwdCells,
+#                      mergeLayersEcalEndcap,
+#                      createEcalEndcapCells,
+#                      createEcalFwdCells,
                       createExtHcalCells,
-                      mergeLayersHcalEndcap,
-                      createHcalEndcapCells,
-                      createHcalFwdCells,
+#                      mergeLayersHcalEndcap,
+#                      createHcalEndcapCells,
+#                      createHcalFwdCells,
                       createTailCatcherCells,
                       out]
 

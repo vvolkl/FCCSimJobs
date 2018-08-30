@@ -1,16 +1,18 @@
 yamldir='/afs/cern.ch/work/h/helsens/public/FCCDicts/yaml/FCC/simu/'
 indir='/eos/experiment/fcc/hh/simulation/samples/'
 statfile='/afs/cern.ch/user/h/helsens/www/data/statsimu_FCC.html'
-
+webfile='/afs/cern.ch/user/h/helsens/www/data/FCCsim_VERSION.txt'
+import sys
+import argparse
 
 #__________________________________________________________
 if __name__=="__main__":
 
-    import argparse
     parser = argparse.ArgumentParser()
 
     jobTypeGroup = parser.add_mutually_exclusive_group(required = True) # Type of events to generate
     jobTypeGroup.add_argument("--check", action='store_true', help="run the jobchecker")
+    jobTypeGroup.add_argument("--checkeos", action='store_true', help="run the jobchecker for eos")
     jobTypeGroup.add_argument("--merge", action='store_true', help="merge the yaml for all the processes")
     jobTypeGroup.add_argument("--clean", action='store_true', help="clean the dictionnary and eos from bad jobs")
     jobTypeGroup.add_argument("--cleanold", action='store_true', help="clean the yaml from old jobs (more than 72 hours)")
@@ -19,7 +21,7 @@ if __name__=="__main__":
 
     parser.add_argument('-p','--process', type=str, help='Name of the process to use to send jobs or for the check', default='')
     parser.add_argument('--force', action='store_true', help='Force the type of process', default=False)
-    parser.add_argument('--version', type=str, help='Version to use', choices = ['v01', 'v02_pre', 'v02', 'v03'])
+    parser.add_argument('--version', type=str, help='Version to use', choices = ['v01', 'v02_pre', 'v02', 'v03', 'v03_hcalOnly', 'v03_hcalOnly_fullSteel', 'v03_hcalOnly_fullLead'])
     args, _ = parser.parse_known_args()
 
     if args.check:
@@ -30,6 +32,18 @@ if __name__=="__main__":
         print args.process
         checker=chky.checker_yaml(indir, '.root', args.process,  yamldir, args.version)
         checker.check(args.force, statfile)
+
+    elif args.checkeos:
+        print 'running the checkeos'
+        if args.process!='':
+            print 'using a specific process ',args.process
+        import checker_eos as chkeos
+        print args.process
+        indireos=indir+args.version
+        indirafs=yamldir+args.version
+        checkereos=chkeos.checker_eos(indirafs, indireos,  args.process)
+        checkereos.check()
+
 
     elif args.merge:
         print 'running the merger'
@@ -52,3 +66,20 @@ if __name__=="__main__":
         import cleaner as clf
         clean=clf.cleaner(indir, yamldir, args.process, args.version)
         clean.cleanoldjobs()
+
+    elif args.web:
+        import printer as prt
+        webfile=webfile.replace('VERSION', args.version)
+        printdic=prt.printer(yamldir,indir,webfile, args.version)
+        printdic.run()
+
+    elif args.remove:
+        if args.process=='':
+            print 'need to specify a process, exit'
+            sys.exit(3)
+ 
+        print 'remove process %s from eos and database'%args.process
+        import remove as rmp
+        remove = rmp.remove(args.process, indir, yamldir, args.version)
+        remove.remove()
+

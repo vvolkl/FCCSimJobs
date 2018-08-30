@@ -2,7 +2,6 @@ path_to_INIT = '/cvmfs/fcc.cern.ch/sw/views/releases/0.9.1/x86_64-slc6-gcc62-opt
 path_to_LHE = '/afs/cern.ch/work/h/helsens/public/FCCsoft/FlatGunLHEventProducer/'
 path_to_FCCSW = '/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj'
 yamldir='/afs/cern.ch/work/h/helsens/public/FCCDicts/yaml/FCC/simu/'
-version = 'v03'
 
 import glob, os, sys
 import commands
@@ -13,6 +12,7 @@ import argparse
 import imp
 import decimal
 import re
+import yaml
 
 from math import pi
 from datetime import datetime
@@ -22,53 +22,116 @@ import makeyaml as my
 import users as us
 
 #__________________________________________________________
-def getInputFiles(path,version):
+def warning(msg, ifConfirm = False):
+    print "=================================="
+    print "==           WARNING           ==="
+    print "=================================="
+    print msg
+    print "=================================="
+    if ifConfirm:
+        choice = raw_input("Do you want to exit and adjust arguments? [y/n] ")
+        if choice.lower() == 'y':
+            exit()
+
+#__________________________________________________________
+def getInputFiles(path):
     files = []
-    dicname = '/afs/cern.ch/work/h/helsens/public/FCCDicts/SimulationDict_'+version+'.json'
-    mydict=None
-    with open(dicname) as f:
-        mydict = json.load(f)
-    if not path in mydict.keys():
-        print "ERROR, dictionary ", dicname, " does not contain ", path
-        quit()
-    for j in mydict[path]:
-        if j['status']=='DONE':
-            if os.path.exists(j['out']):
-                files.append(j['out'])
-    if len(files) == 0:
-        print "ERROR, no input files"
-        quit()
+    All_files = glob.glob("%s/merge.yaml"%path)
+    if len(All_files)==0:
+        print 'there is no files checked for process %s exit'%path
+        sys.exit(3)
+
+    if len(All_files)>1:
+        print 'not sure how you can get two merged files %s exit'%path
+        sys.exit(3)
+
+    with open(All_files[0], 'r') as stream:
+        try:
+            tmpf = yaml.load(stream)
+            outfiles=tmpf['merge']['outfiles']
+            for f in outfiles:
+                fname='%s%s'%(tmpf['merge']['outdir'],f[0])
+                files.append(fname)
+        except yaml.YAMLError as exc:
+            print(exc)
+
     return files
 
 #__________________________________________________________
-def takeOnlyNonexistingFiles(files):
-    # ToDo remove from list files that exist in a reco dictionary
-    return files, len(files)
+def takeOnlyNonexistingFiles(files, output):
+    All_files = glob.glob("%s/output*.yaml"%output)
+    if len(All_files)==0: return files, len(files)
+    newlist=[]
+    for f in files:
+        found=False
+        tocheck=f.split('/')[-1]
+        tocheck=tocheck.replace('.root','')
+        for ff in All_files:
+            if tocheck in ff: found=True
+        if not found:newlist.append(f)
+    return newlist, len(newlist)
 
 
 #__________________________________________________________
 def getJobInfo(argv):
     if '--recPositions' in argv:
         default_options = 'config/recPositions.py'
-        job_type = "reco/positions"
+        job_type = "ntup/positions"
         short_job_type = "recPos"
+        if '--resegmentHCal' in argv:
+            job_type = "ntup/resegmentedHCal/positions"
+            short_job_type += "_resegmHCal"
         return default_options,job_type,short_job_type,False
 
     elif '--recSlidingWindow' in argv:
         default_options = 'config/recSlidingWindow.py'
         if '--noise' in argv:
             job_type = "reco/slidingWindow/electronicsNoise"
+        elif '--addPileupNoise' in argv:
+            job_type = "reco/slidingWindow/pileupNoise"
         else:
             job_type = "reco/slidingWindow/noNoise"
         short_job_type = "recWin"
         return default_options,job_type,short_job_type,False
 
-    elif '--recTopoClusters' in argv:
-        default_options = 'config/recTopoClusters.py'
-        job_type = "reco/topoClusters"
-        short_job_type = "recTopo"
+    elif '--estimatePileup' in sys.argv:
+        default_options = 'config/preparePileup.py'
+        job_type = "ana/fullBarrel/pileup_cluster"
+        short_job_type = "pileup"
         return default_options,job_type,short_job_type,False
 
+    elif '--mergePileup' in sys.argv:
+        default_options = 'config/overlayPileup.py'
+        job_type = "simuPU"
+        short_job_type = "pileup"
+        return default_options,job_type,short_job_type,False
+
+    elif '--addPileupToSignal' in argv:
+        default_options = 'config/overlayPileup.py'
+        job_type = "simuPU"
+        short_job_type = "addPileup"
+        return default_options,job_type,short_job_type,False
+ 
+    elif '--recTopoClusters' in argv:
+        default_options = 'config/recTopoClusters.py'
+        job_type = "reco/topoClusters/"
+        short_job_type = "recTopo"
+        if '--noise' in argv:
+            job_type += "electronicsNoise/"
+            short_job_type += "_addNoise"
+        elif '--addPileupNoise' in argv:
+            job_type += "pileupNoise/"
+            short_job_type += "_addNoise"
+        else:
+            job_type += "noNoise/"
+        if '--resegmentHCal' in argv:
+            job_type += "resegmentedHCal/"
+            short_job_type += "_resegmHCal"
+        if '--calibrate' in argv:
+            job_type += "/calibrated/08_2018/"
+            short_job_type += "_calib"
+        return default_options,job_type,short_job_type,False
+    
     elif '--ntuple' in argv:
         default_options = '....' # TODO how ?
         job_type = "ntup"
@@ -108,13 +171,12 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--local', type=str, help='Use local FCCSW installation, need to provide a file with path_to_INIT and or path_to_FCCSW')
     parser.add_argument('--version', type=str, default = "v03", help='Specify the version of FCCSimJobs')
-    yamlcheck = yamldir+version+'/check.yaml'
 
     parser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
     parser.add_argument("--pythiaSmearVertex", action='store_true', help="Write vertex smearing parameters to pythia config file")
     parser.add_argument("--no_eoscopy", action='store_true',  help="DON'T copy result files to eos")
 
-    parser.add_argument('-n','--numEvents', type=int, help='Number of simulation events per job', required='--recPositions' not in sys.argv and '--recSlidingWindow' not in sys.argv and '--recTopoClusters' not in sys.argv and '--ntuple' not in sys.argv)
+    parser.add_argument('-n','--numEvents', type=int, help='Number of simulation events per job', required='--recPositions' not in sys.argv and '--recSlidingWindow' not in sys.argv and '--recTopoClusters' not in sys.argv and '--ntuple' not in sys.argv and '--addPileupToSignal' not in sys.argv)
     parser.add_argument('-N','--numJobs', type=int, default = 10, help='Number of jobs to submit')
     parser.add_argument('-o','--output', type=str, help='Path of the output on EOS', default="/eos/experiment/fcc/hh/simulation/samples/")
     parser.add_argument('-l','--log', type=str, help='Path of the logs', default = "BatchOutputs/")
@@ -125,14 +187,18 @@ if __name__=="__main__":
     jobTypeGroup.add_argument("--recPositions", action='store_true', help="Generate positions of cells with deposited energy")
     jobTypeGroup.add_argument("--recSlidingWindow", action='store_true', help="Reconstruction with sliding window")
     jobTypeGroup.add_argument("--recTopoClusters", action='store_true', help="Reconstruction with topo-clusters")
+    jobTypeGroup.add_argument("--estimatePileup", action='store_true', help="Estimate pileup from minbias events")
+    jobTypeGroup.add_argument("--mergePileup", action='store_true', help="Estimate pileup from minbias events")
+    jobTypeGroup.add_argument('--addPileupToSignal', action="store_true", help='Add PU events to signal.')
     jobTypeGroup.add_argument("--ntuple", action='store_true', help="Conversion to ntuple")
     jobTypeGroup.add_argument("--trackerPerformance", action='store_true', help="Tracker-only performance studies")
+    # Add noise on cluster level
     parser.add_argument("--noise", action='store_true', help="Add electronics noise")
-
+    parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
+    parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv or '--addPileupNoise' in sys.argv or '--addPileupToSignal' in sys.argv, help='Pileup')
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
-
+    
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
-
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
 
     genTypeGroup = parser.add_mutually_exclusive_group(required = True) # Type of events to generate
@@ -149,13 +215,29 @@ if __name__=="__main__":
     singlePartGroup.add_argument('--particle', type=int,  required = '--singlePart' in sys.argv, help='Particle type (PDG)')
 
     physicsGroup = parser.add_argument_group('Physics','Physics process')
-    lhe_physics = ["ljets","top","Wqq","Zqq","Hbb"]
+    lhe_physics = ["ljets","cjets","bjets","top","Wqq","Zqq","Hbb"]
     SM_physics = ["MinBias","Haa","Zee", "H4e"]
     physicsGroup.add_argument('--process', type=str, required = '--physics' in sys.argv, help='Process type', choices = lhe_physics + SM_physics)
     physicsGroup.add_argument('--pt', type=int,
                               required = ('ljets' in sys.argv or 'top' in sys.argv or 'Wqq' in sys.argv
                                           or 'Zqq' in sys.argv or 'Hbb' in sys.argv),
                               help='Transverse momentum of simulated jets (valid only for Hbb, Wqq, Zqq, t, ljet)')
+    physicsGroup.add_argument('--rebase', action='store_true', help='Rebase the merged PU to baseline 0, with averaged mean values.')
+
+    recoPositionsGroup = parser.add_argument_group('RecoPositions','Cell positions reconstruction')
+    recoPositionsGroup.add_argument('--resegmentHCal', action='store_true', help="Resegment HCal cells to deltaEta = 0.025")
+
+    recoSlidingWinGroup = parser.add_argument_group('RecoSlidingWindow','Sliding window reconstruction')
+    recoSlidingWinGroup.add_argument('--winEta', type=int, default=7, help='Size of the final cluster in eta')
+    recoSlidingWinGroup.add_argument('--winPhi', type=int, default=19, help='Size of the final cluster in phi')
+    recoSlidingWinGroup.add_argument('--enThreshold', type=float, default=3., help='Energy threshold of the seeding clusters [GeV]')
+
+    recoTopoClusterGroup = parser.add_argument_group('RecoTopoCluster','Topological cluster reconstruction')
+    recoTopoClusterGroup.add_argument('--sigma1', type=int, default=4, help='Energy threshold [in number of sigmas] for seeding')
+    recoTopoClusterGroup.add_argument('--sigma2', type=float, default=2, help='Energy threshold [in number of sigmas] for neighbours')
+    recoTopoClusterGroup.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
+    recoTopoClusterGroup.add_argument('--calibrate', action='store_true', help="Calibrate Topo-cluster")
+
     args, _ = parser.parse_known_args()
 
     batchGroup = parser.add_mutually_exclusive_group(required = True) # Where to submit jobs
@@ -188,13 +270,42 @@ if __name__=="__main__":
         print 'path_to_FCCSW: ',path_to_FCCSW
 
     version = args.version
+
     print 'FCCSim version: ',version
     magnetic_field = not args.bFieldOff
     b_field_str = "bFieldOn" if not args.bFieldOff else "bFieldOff"
-    num_events = args.numEvents if sim else -1 # if reconstruction is done use -1 to run over all events in file
+    num_events = args.numEvents if sim or args.recTopoClusters else -1 # if reconstruction is done use -1 to run over all events in file
     num_jobs = args.numJobs
     job_options = args.jobOptions
     output_path = args.output
+
+    ## Use Pileup valid only in certain cases!
+    if args.addPileupNoise: # pileup is used to specify level of the pileup noise
+        job_type = job_type.replace("pileupNoise", "pileupNoise/PU"+str(args.pileup))
+        short_job_type += "PU"+str(args.pileup)
+    elif args.mergePileup or args.addPileupToSignal: # merge cells from simulated events
+        job_type = "simuPU"+str(args.pileup)
+        short_job_type += "PU"+str(args.pileup)
+        if args.rebase:
+            short_job_type += "_rebase"
+            job_type += "/rebase/"
+        num_events = args.numEvents
+    elif args.estimatePileup and args.pileup:
+        short_job_type += "_PU"+str(args.pileup)
+        job_type += "/PU"+str(args.pileup)+"/"
+    elif args.pileup:
+        warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
+    
+    if (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup and not args.addPileupNoise: # if reconstruction is run on pileup (mixed) events
+        job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
+        short_job_type += "PU"+str(args.pileup)
+    
+    if args.recSlidingWindow:
+        job_type += '/eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold) + '/'
+        short_job_type += '_eta' + str(args.winEta) + 'phi' + str(args.winPhi) + 'en' + str(args.enThreshold)
+    elif args.recTopoClusters:
+        job_type += '/' + str(args.sigma1) + str(args.sigma2) + str(args.sigma3) + '/'
+        short_job_type += '_' + str(args.sigma1) + str(args.sigma2) + str(args.sigma3)
 
     print "B field: ", magnetic_field
     print "number of events = ", num_events
@@ -242,7 +353,7 @@ if __name__=="__main__":
             pt = args.pt
             print "LHE: ", LHE
             print "jet pt: ", pt
-            job_dir += "etaTo1.5/" + str(pt) + "GeV/"
+            job_dir += "etaTo"+str(args.etaMax)+"/" + str(pt) + "GeV/"
         else:
             LHE = False
             job_dir += "etaFull/"
@@ -260,19 +371,57 @@ if __name__=="__main__":
     rundir = os.getcwd()
     nbjobsSub=0
 
+    if args.mergePileup and not args.local == "inits/reco.py":
+        warning("Please note that '--mergePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.addPileupToSignal and not args.local == "inits/reco.py":
+        warning("Please note that '--addPileupToSignal' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.estimatePileup and not args.local == "inits/reco.py":
+        warning("Please note that '--preparePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.recPositions and not args.local == "inits/reco.py":
+        warning("Please note that '--recPositions' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.recTopoClusters and not args.local == "inits/reco.py":
+        warning("Please note that '--recTopoClusters' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.recTopoClusters and args.numEvents != -1:
+        warning("Please note that '--recTopoClusters' is not run on all events available in simu (recommended: '--n -1')", True)
+
     # first make sure the output path for root files exists
     outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
     if not sim:
-        inputID = version+"/" + job_dir + "/simu"
-        inputID = inputID.replace('//','/')
-        input_files = getInputFiles(inputID,version)
-        input_files, instatus = takeOnlyNonexistingFiles(input_files)
+        # if signal events are used (simu/) or mixed pileup events (simuPU.../)
+        if not args.mergePileup and not args.addPileupNoise and not args.addPileupToSignal and args.pileup and not (args.pileup == 0):
+            inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
+            if args.rebase:
+                inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/')
+        else:
+            inputID = os.path.join(yamldir, version, job_dir, 'simu')
+        outputID = os.path.join(yamldir, version, job_dir, job_type)
+
+        input_files = getInputFiles(inputID)
+        input_files, instatus = takeOnlyNonexistingFiles(input_files, outputID)
+
+        if instatus == 0:
+            warning("Directory contains no files")
+            exit()
         if instatus < num_jobs:
             num_jobs = instatus
-            print "WARNING Directory contains only ", instatus, " files, using all for the reconstruction"
-        print "Input files for reconstruction:"
-        print input_files
+            warning("Directory contains only " + str(instatus) + " files, using all for the reconstruction")
+    
+    # for the purpose of mixing pileup events (only or to signal) all inputs must be passed to the config
+    # merging pileup events will be done randomly from a given event pool
+    if args.mergePileup or args.addPileupToSignal:
+        all_inputs = ""
+        if args.addPileupToSignal: 
+            inputPileupID = os.path.join(yamldir, version, 'physics/MinBias/'+b_field_str+'/etaFull/simuPU'+str(args.pileup)+'/')
+            pileup_input_files = getInputFiles(inputPileupID)
+        else: 
+            pileup_input_files = input_files
+        for f in pileup_input_files:
+            all_inputs += " " + f # event pool = all inputs
+        seed=ut.getuid() # to generate new output name
+        print 'seed  ',seed
+        outfile = 'output_%i.root'%(seed)
+        print "Name of the output file: ", outfile           
 
     os.system("mkdir -p %s"%outdir)
     # first make sure the output path exists
@@ -299,8 +448,7 @@ if __name__=="__main__":
             if not ut.dir_exist(yamldir_process):
                 os.system("mkdir -p %s"%yamldir_process)
             myyaml = my.makeyaml(yamldir_process, seed)
-        
-            if not myyaml: 
+            if not myyaml:
                 print 'job %s already exists'%str(seed)
                 continue
 
@@ -311,9 +459,21 @@ if __name__=="__main__":
             infile = os.path.basename(input_files[i])
             outfile = infile
             print "Name of the input file: ", infile
+            if args.addPileupToSignal :
+                print "Names of the input files for pileup events: ", pileup_input_files
+
+            yamldir_process = '%s/%s'%(yamldir,uid)
+            if not ut.dir_exist(yamldir_process):
+                os.system("mkdir -p %s"%yamldir_process)
+
             infile_split = re.split(r'[_.]',infile)
-            uniqueID = infile_split[2] + '_' + infile_split[3]
-            print uniqueID
+            seed = infile_split[1]
+            myyaml = my.makeyaml(yamldir_process, seed)
+            if not myyaml:
+                print 'job %s already exists'%str(seed)
+                continue
+
+
         if args.physics:
             frunname = 'job_%s_%s_%s.sh'%(short_job_type,process,str(seed))
         else:
@@ -349,8 +509,34 @@ if __name__=="__main__":
             common_fccsw_command += ' --seed %i'%(seed)
         if args.noise:
             common_fccsw_command += ' --addElectronicsNoise'
+        elif args.addPileupNoise:
+            common_fccsw_command += ' --addPileupNoise --pileup ' + str(args.pileup)
+        if args.calibrate:
+            common_fccsw_command += ' --calibrate'
+        if args.rebase:
+            common_fccsw_command += ' --rebase'
         if args.physics:
             common_fccsw_command += ' --physics'
+        if args.resegmentHCal:
+            common_fccsw_command += ' --resegmentHCal '
+        if '--local' in sys.argv:
+            common_fccsw_command += ' --detectorPath ' + path_to_FCCSW
+        if args.mergePileup:
+            common_fccsw_command += ' --pileup ' + str(args.pileup)
+        elif args.addPileupToSignal:
+            common_fccsw_command += ' --pileup ' + str(args.pileup)            
+        if args.recPositions:
+            if args.pileup:
+                common_fccsw_command += ' --prefixCollections merged '
+        if args.recSlidingWindow:
+            common_fccsw_command += ' --winEta ' + str(args.winEta) + ' --winPhi ' + str(args.winPhi) + ' --enThreshold ' + str(args.enThreshold) + ' '
+        if args.recTopoClusters:
+            common_fccsw_command += ' --sigma1 ' + str(args.sigma1) + ' --sigma2 ' + str(args.sigma2) + ' --sigma3 ' + str(args.sigma3) + ' '
+            if args.pileup and not args.addPileupNoise:
+                common_fccsw_command +=  '--pileup ' + str(args.pileup)
+        if args.pileup and not args.addPileupNoise and not args.mergePileup:
+            common_fccsw_command += ' --prefixCollections merged '
+                    
         print '-------------------------------------'
         print common_fccsw_command
         print '-------------------------------------'
@@ -363,17 +549,19 @@ if __name__=="__main__":
                     #CLEMENT TO BE CHANGED the eta values etaMin,etaMax -> -1.6,1.6
                     frun.write('cd %s\n' %(path_to_LHE))
                     if process=='ljets':
-                        frun.write('python flatGunLHEventProducer.py   --pdg 1 2 3   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
-                    # elif process=='bjets':
-                    #     frun.write('python flatGunLHEventProducer.py   --pdg 5   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
+                        frun.write('python flatGunLHEventProducer.py   --pdg 1 2 3   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
+                    elif process=='cjets':
+                        frun.write('python flatGunLHEventProducer.py   --pdg 4   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
+                    elif process=='bjets':
+                        frun.write('python flatGunLHEventProducer.py   --pdg 5   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
                     elif process=='top':
-                        frun.write('python flatGunLHEventProducer.py   --pdg 6   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
+                        frun.write('python flatGunLHEventProducer.py   --pdg 6   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
                     elif process=='Zqq':
-                        frun.write('python flatGunLHEventProducer.py   --pdg 23   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
+                        frun.write('python flatGunLHEventProducer.py   --pdg 23   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
                     elif process=='Wqq':
-                        frun.write('python flatGunLHEventProducer.py   --pdg 24   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
+                        frun.write('python flatGunLHEventProducer.py   --pdg 24   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
                     elif process=='Hbb':
-                        frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-1.6,1.6,seed))
+                        frun.write('python flatGunLHEventProducer.py   --pdg 25   --guntype pt   --nevts %i   --ecm 100000.   --pmin %f   --pmax %f   --etamin %f   --etamax %f  --seed %i   --output $JOBDIR/events.lhe\n'%(num_events,pt,pt,-args.etaMax,args.etaMax,seed))
                     else:
                         print 'process does not exists, exit'
                         sys.exit(3)
@@ -394,20 +582,48 @@ if __name__=="__main__":
                 frun.write('%s  --singlePart --particle %i -e %i --etaMin %f --etaMax %f --phiMin %f --phiMax %f\n'%(common_fccsw_command, pdg, energy, etaMin, etaMax, phiMin, phiMax))
         else:
             frun.write('cd $JOBDIR\n')
-            frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
-        if '--recPositions' in sys.argv:
-            frun.write('python %s/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
+            if args.mergePileup:
+                frun.write('%s --inName %s\n'%(common_fccsw_command, all_inputs))
+            elif args.addPileupToSignal:
+                frun.write('%s --inSignalName %s --inName %s\n'%(common_fccsw_command, input_files[i], all_inputs))
+            else:
+                frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
+        if args.recPositions:
+            if args.resegmentHCal:
+                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s --resegmentedHCal \n'%(current_dir,outfile))
+            else:
+                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
+        elif args.recTopoClusters or args.recSlidingWindow:
+            if args.resegmentHCal:
+                frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters_%s.root --resegmentedHCal \n'%(current_dir,outfile,seed))
+            else:
+                frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters_%s.root\n'%(current_dir,outfile,seed))
+            frun.write('rm $JOBDIR/clusters_%s.root \n'%(seed))
+            ntup_path = outdir.replace('/reco', '/ntup')
+            if not ut.dir_exist(ntup_path):
+                os.system("mkdir -p %s"%(ntup_path))
+            frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters_%s.root %s/%s\n'%(seed,ntup_path,outfile))
+            if args.calibrate:
+                ana_path = ntup_path.replace('/ntup', '/ana/')
+                if not ut.dir_exist(ana_path):
+                    os.system("mkdir -p %s"%(ana_path))
+                frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s\n'%( ana_path+'/'+outfile ))
+                frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
         if not args.no_eoscopy:
           frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
-          frun.write('rm $JOBDIR/%s \n'%(outfile))
+          
+        frun.write('rm $JOBDIR/%s \n'%(outfile))
         frun.close()
 
         if args.lsf:
-            cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
+            #cmdBatch="bsub -M 4000000 -R \"pool=40000\" -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
+            if args.addPileupToSignal or args.mergePileup:
+                cmdBatch="bsub  -R 'rusage[mem=40000:pool=8000]' -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)
+            else:
+                cmdBatch="bsub  -R 'rusage[mem=20000:pool=8000]' -q %s -cwd%s %s" %(queue, logdir,logdir+'/'+frunname)    
             batchid=-1
             job,batchid=ut.SubmitToLsf(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid, False)
         elif args.no_submit:
             job = 0
             print "scripts generated in ", os.path.join(logdir, frunname),
@@ -436,6 +652,7 @@ if __name__=="__main__":
             else:
                 fsub.write('RequestCpus = 4\n')
             fsub.write('+JobFlavour = "nextweek"\n')
+            fsub.write('+AccountingGroup = "group_u_FCC.local_gen"\n')
             fsub.write('queue 1\n')
             fsub.close()
             cmdBatch="condor_submit %s/%s"%(logdir.replace(current_dir+"/",''),fsubname)
@@ -443,7 +660,6 @@ if __name__=="__main__":
             print cmdBatch
             batchid=-1
             job,batchid=ut.SubmitToCondor(cmdBatch,10)
-            ut.yamlstatus(yamlcheck, uid, False)
 
         nbjobsSub+=job
 
