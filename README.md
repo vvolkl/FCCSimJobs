@@ -67,8 +67,6 @@ The default FCC Software verson is 0.9.1 taken from
    - the **--local** option allows to initialize local SW installation, add your path in inits/private.py script
    - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
    - the topo-clusters reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
- 
-The default detector geometry follows the reference detector. However, for specific studies it is possible to only build HCal with the flag **--hcalOnly** and additionally for full Steel absorber choice **--fullSteel**. The option using steel absorbers only needs to be run on the local FCCSW installation: **--local inits/reco.py**
 
 Running examples
 ================
