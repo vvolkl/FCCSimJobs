@@ -67,7 +67,6 @@ The default FCC Software verson is 0.9.1 taken from
    - the **--local** option allows to initialize local SW installation, add your path in inits/private.py script
    - the cell positions reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
    - the topo-clusters reconstruction is running only on local SW installation (/afs/cern.ch/work/c/cneubuse/public/TopoClusters/FCCSW/), to use this add **--local inits/reco.py**
- 
 
 Running examples
 ================
@@ -114,17 +113,26 @@ There are several approaches of addressing the pile-up in the detector:
   It creates histograms filling in the information on the deposits per event. This can be later scaled with *sqrt(mu)* for the noise (RMS of the energy distributions) and with *mu* for the mean energy deposit.
   Detailed analysis and this scaling is done with FCC_calo_analysis_cpp toolkit.
 
-- apply estimated noise levels at the cluster level for sliding window reconstruction or layer by layer for the topological clusters (**--addPileupNoise**).
+- apply estimated noise levels at the cluster level for sliding window reconstruction or per cell for the topological clusters (**--addPileupNoise**).
 
 2. Mix already simulated events in order to overlay:
 
-- cells that are later passed to the reconstruction (**--mergePileup**)
 
-- or clusters that can be directly analysed (not yet supported)
+2.1. cells that are later passed to the reconstruction
+
+2.1.1 merge MinBias events (**--mergePileup**)
+
+2.1.2 merge signal and PU events that are later passed to the reconstruction (**--addPileupToSignal**)
+```
+python python/send.py --singlePart --particle -211 -e 10 --addPileupToSignal --pileup 200 --local inits/pileup.py -N 1 --lsf
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --noise
+python python/send.py --local inits/reco.py --physics --process MinBias -N 1 --lsf --recTopoClusters --addPileupNoise --mu 100
+```
 
 
 Miscellaneous
 ==============
+
 Formatting rules:
 - The directory names are used to identify their content. Please make sure that their are:
   - only root files with **edm classes** in /simu/ and /reco/
@@ -142,15 +150,6 @@ This is something that can not be done centrally yet as I do not have rights to 
 
 Expert mode
 ===========
-check eos for a given process
-```
-python python/run.py --checkeos --version v03 --process physics/MinBias/bFieldOn/etaFull/simu
-```
-
-check eos for everything
-```
-python python/run.py --checkeos --version v03
-```
 
 check for a given process
 ```
@@ -183,7 +182,6 @@ python python/run.py --web --version v03
 ```
 
 
-
 WARNING
 ===========
 
@@ -191,6 +189,7 @@ Official installation of FCCSW does not support certain options (not yet in the 
 
 ```
 --mergePileup --local inits/pileup.py
+--addPileupToSignal --local inits/pileup.py
 --estimatePileup --local inits/pileup.py
 --recPositions --local inits/reco.py
 --recTopoClusters --local inits/reco.py
