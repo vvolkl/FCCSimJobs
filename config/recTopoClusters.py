@@ -130,13 +130,7 @@ hcalFieldValues=[8]
 # inputs for topo-clustering
 inputCellCollectionECalBarrel = prefix+"ECalBarrelCells"
 inputCellCollectionHCalBarrel = prefix+"HCalBarrelCells"
-inputCollections = [inputCellCollectionECalBarrel,  inputCellCollectionHCalBarrel]
-
-if not prefix=="merged": 
-#and not prefix=="addedPU":
-    inputCollections += ["GenParticles", "GenVertices"]
-
-print "Reading collections: ", inputCollections
+inputCollections = [prefix+"ECalBarrelCells", prefix+"HCalBarrelCells", "GenParticles", "GenVertices"]
 
 inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_constNoiseLevel.root"
 inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_segHcal_noiseLevelElectronicsPileup_mu"+str(puEvents)+".root"
@@ -155,7 +149,9 @@ if bFieldOff:
 from Configurables import ApplicationMgr, FCCDataSvc, PodioInput, PodioOutput
 podioevent = FCCDataSvc("EventDataSvc", input=input_name)
 
-podioinput = PodioInput("PodioReader", collections = inputCollections, OutputLevel = DEBUG)
+podioinput = PodioInput("PodioReader", collections=inputCollections, OutputLevel=DEBUG)
+
+print "Reading collections: ", inputCollections
 
 ##############################################################################################################
 #######                                       CELL POSITIONS  TOOLS                              #############
@@ -299,12 +295,16 @@ if elNoise and not puNoise:
     if not resegmentHCal:
         inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_electronicsNoiseLevel.root"
         if addedPU > 0:
-            # no offset, but pu rms 
-            inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_segHcal_noiseLevelElectronicsPileup_mu"+str(addedPU)+".root"
+            # no offset, but rms from  MinBias/simuPU200/ 
+            # input cells already resegmented HCal segmentation
+            inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_electronicsNoiseLevel_forPU"+str(addedPU)+"_recTopo.root"
     else:
         if addedPU > 0:
-            inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_electronicsNoiseLevel_PU"+str(addedPU)+".root"
-
+            # no offset, but rms from  MinBias/simuPU200/                                                                                                                   
+            # input cells already resegmented HCal segmentation                                                                                                             
+            inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/resegmentedHCal/cellNoise_map_electronicsNoiseLevel_forPU"+str(addedPU)+"_recTopo.root"
+            
+            
     print 'Using electronics noise per cell map: ', inputNoisePerCell
         
     from Configurables import CreateCaloCells, NoiseCaloCellsFromFileTool, CalibrateCaloHitsTool, NoiseCaloCellsFlatTool
@@ -731,5 +731,5 @@ ApplicationMgr(
     EvtSel = 'NONE',
     EvtMax   = num_events,
     ExtSvc = [geoservice, podioevent],
-    # OutputLevel = DEBUG
+#    OutputLevel = DEBUG
 )

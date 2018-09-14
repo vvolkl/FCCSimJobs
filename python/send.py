@@ -96,8 +96,11 @@ def getJobInfo(argv):
 
     elif '--estimatePileup' in sys.argv:
         default_options = 'config/preparePileup.py'
-        job_type = "ana/fullBarrel/pileup_cluster"
+        job_type = "ana/fullBarrel/pileup/"
         short_job_type = "pileup"
+        if '--resegmentHCal' in argv:
+            job_type += "resegmentedHCal/"
+            short_job_type += "_resegmHCal"
         return default_options,job_type,short_job_type,False
 
     elif '--mergePileup' in sys.argv:
@@ -289,6 +292,9 @@ if __name__=="__main__":
         if args.rebase:
             short_job_type += "_rebase"
             job_type += "/rebase/"
+        if args.resegmentHCal:
+            short_job_type += "_resegmHCal"
+            job_type += "resegmentedHCal/"
         num_events = args.numEvents
     elif args.estimatePileup and args.pileup:
         short_job_type += "_PU"+str(args.pileup)
@@ -411,7 +417,10 @@ if __name__=="__main__":
     # merging pileup events will be done randomly from a given event pool
     if args.mergePileup or args.addPileupToSignal:
         all_inputs = ""
-        if args.addPileupToSignal: 
+        if args.addPileupToSignal:
+            path_to_input_withPU = 'physics/MinBias/'+b_field_str+'/etaFull/simuPU'+str(args.pileup)+'/'
+            if args.resegmentHCal:
+                path_to_input_withPU += 'resegmentedHCal/'
             inputPileupID = os.path.join(yamldir, version, 'physics/MinBias/'+b_field_str+'/etaFull/simuPU'+str(args.pileup)+'/')
             pileup_input_files = getInputFiles(inputPileupID)
         else: 
