@@ -263,7 +263,8 @@ if resegmentHCal:
     inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_electronicsNoiseLevel_PU"+str(puEvents)+".root"
     if bFieldOff:
         inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_electronicsNoiseLevel_PU"+str(puEvents)+".root"
-    inputTopoCellCollectionHCalBarrel = "newHCalBarrelCells"
+    if not addedPU > 0:
+        inputTopoCellCollectionHCalBarrel = "newHCalBarrelCells"
     hcalBarrelReadoutName = hcalBarrelReadoutNamePhiEta
     noSegmentationHCal = False
     inputPileupNoisePerCell.replace('mu', 'PU')
@@ -709,7 +710,7 @@ out.AuditExecute = True
 list_of_algorithms = [podioinput,
                       createemptycells]
 
-if resegmentHCal:
+if resegmentHCal and addedPU==0:
     list_of_algorithms += [posHcalBarrel, resegmentHcalBarrel, createHcalBarrelCells]
 
 if elNoise or puNoise:

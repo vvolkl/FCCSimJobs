@@ -397,8 +397,12 @@ if __name__=="__main__":
         # if signal events are used (simu/) or mixed pileup events (simuPU.../)
         if not args.mergePileup and not args.addPileupNoise and not args.addPileupToSignal and args.pileup and not (args.pileup == 0):
             inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
-            if args.rebase:
+            if args.rebase and not args.resegmentHCal:
                 inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/')
+            elif args.resegmentHCal and not args.rebase:
+                inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/resegmentedHCal/')
+            elif args.rebase and args.resegmentHCal:
+                inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/resegmentedHCal/')
         else:
             inputID = os.path.join(yamldir, version, job_dir, 'simu')
         outputID = os.path.join(yamldir, version, job_dir, job_type)

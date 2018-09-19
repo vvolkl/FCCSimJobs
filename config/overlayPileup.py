@@ -141,19 +141,24 @@ overlay.doShuffleInputFiles = True
 overlay.randomizePileup = True
 overlay.mergeTools = [
     "PileupCaloHitMergeTool/ECalBarrelHitMerge",
-    "PileupCaloHitMergeTool/ECalEndcapHitMerge",
-    "PileupCaloHitMergeTool/ECalFwdHitMerge",
     "PileupCaloHitMergeTool/HCalBarrelHitMerge",
-    "PileupCaloHitMergeTool/HCalExtBarrelHitMerge",
-    "PileupCaloHitMergeTool/HCalEndcapHitMerge",
-    "PileupCaloHitMergeTool/HCalFwdHitMerge"]
+    ]
+
+if not rebase:
+    overlay.mergeTools += [
+        "PileupCaloHitMergeTool/ECalEndcapHitMerge",
+        "PileupCaloHitMergeTool/ECalFwdHitMerge",
+        "PileupCaloHitMergeTool/HCalExtBarrelHitMerge",
+        "PileupCaloHitMergeTool/HCalEndcapHitMerge",
+        "PileupCaloHitMergeTool/HCalFwdHitMerge"
+        ]
     
 overlay.PileUpTool = pileuptool
 overlay.noSignal = noSignal
 
 ecalBarrelOutput1 = "mergedECalBarrelCells"
 hcalBarrelOutput1 = "mergedHCalBarrelCells"
-
+hcalBarrelOutput2 = ""
 if rebase:
     # name of output of pileup merge
     ecalBarrelOutput1 = "mergedECalBarrelCellsStep1"
@@ -266,19 +271,23 @@ rebaseHcalBarrelCells = CreateCaloCells("RebaseHCalBarrelCells",
 # PODIO algorithm
 from Configurables import PodioOutput
 out = PodioOutput("out")
-out.outputCommands = ["drop *", "keep mergedGenVertices", "keep mergedGenParticles", "keep mergedECalBarrelCells", "keep mergedECalEndcapCells", "keep mergedECalFwdCells", "keep mergedHCalBarrelCells", "keep mergedHCalExtBarrelCells", "keep mergedHCalEndcapCells", "keep mergedHCalFwdCells"]
+out.outputCommands = ["drop *", "keep GenVertices", "keep GenParticles", "keep mergedECalBarrelCells", "keep mergedECalEndcapCells", "keep mergedECalFwdCells", "keep mergedHCalBarrelCells", "keep mergedHCalExtBarrelCells", "keep mergedHCalEndcapCells", "keep mergedHCalFwdCells"]
 out.filename = output_name
 
 list_of_algorithms += [overlay,
                        createEcalBarrelCells,
-                       createEcalEndcapCells,
-                       createEcalFwdCells,
                        createHcalBarrelCells,
-                       createHcalExtBarrelCells,
-                       createHcalEndcapCells,
-                       createHcalFwdCells,
                        ]
-
+if not rebase:
+    list_of_algorithms += [
+        createEcalEndcapCells,
+        createEcalFwdCells,
+        createHcalBarrelCells,
+        createHcalExtBarrelCells,
+        createHcalEndcapCells,
+        createHcalFwdCells,
+        ]
+    
 if rebase:
     if resegmentHCal:
         list_of_algorithms += [

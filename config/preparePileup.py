@@ -63,7 +63,7 @@ HCalBcellVols = CellPositionsHCalBarrelNoSegTool("CellPositionsHCalBarrelVols",
                                                  OutputLevel = INFO)
 HCalBsegcells = CellPositionsHCalBarrelTool("CellPositionsHCalSegBarrel",
                                             readoutName = hcalBarrelReadoutNamePhiEta,
-                                            radii = [291.05, 301.05, 313.55, 328.55, 343.55, 358.55, 378.55, 413.55, 428.55, 453.55],
+                                            radii = [2910.5, 3010.5, 3135.5, 3285.5, 3435.5, 3585.5, 3785.5, 4135.5, 4285.5, 4535.5],
                                             OutputLevel = INFO)
 
 ##############################################################################################################                                                                                           #######                                       RESEGMENT HCAL                                   #############                                                                                             ##############################################################################################################                                                                                                                              
