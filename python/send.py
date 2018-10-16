@@ -76,11 +76,14 @@ def takeOnlyNonexistingFiles(files, output):
 def getJobInfo(argv):
     if '--recPositions' in argv:
         default_options = 'config/recPositions.py'
-        job_type = "ntup/positions"
+        job_type = "ntup/positions/"
         short_job_type = "recPos"
         if '--resegmentHCal' in argv:
-            job_type = "ntup/resegmentedHCal/positions"
+            job_type = "ntup/positions/resegmentedHCal/"
             short_job_type += "_resegmHCal"
+        if '--noise' in argv:
+            job_type += "electronicsNoise/"
+            short_job_type += "_addNoise"
         return default_options,job_type,short_job_type,False
 
     elif '--recSlidingWindow' in argv:
@@ -605,7 +608,7 @@ if __name__=="__main__":
             if args.resegmentHCal:
                 frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s --resegmentedHCal \n'%(current_dir,outfile))
             else:
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
+                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s \n'%(current_dir,outfile))
             frun.write('rm edm.root \n')
         elif args.recTopoClusters or args.recSlidingWindow:
             if args.resegmentHCal:
