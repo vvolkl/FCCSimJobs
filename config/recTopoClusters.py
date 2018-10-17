@@ -47,7 +47,12 @@ print "calibrate clusters: ", calib
 print "resegment HCal: ", resegmentHCal
 print "no B field: ", bFieldOff
 
-# Paramerters for cluster calibration                                                                                                                                                                             
+# correct EM calibration of hcal cells                                                                                                                                                    
+hadronSampl_hcal = 0.024
+emSampl_hcal = 0.0255
+if bFieldOff:
+    emSampl_hcal = 0.0249
+# Paramerters for cluster calibration                                                                                                                                         
 benchmark_a = 1.07
 benchmark_b = 0.76
 benchmark_c = -1.9E-5
@@ -130,15 +135,16 @@ hcalFieldValues=[8]
 # inputs for topo-clustering
 inputCellCollectionECalBarrel = prefix+"ECalBarrelCells"
 inputCellCollectionHCalBarrel = prefix+"HCalBarrelCells"
-inputCollections = [prefix+"ECalBarrelCells", prefix+"HCalBarrelCells", "GenParticles", "GenVertices"]
-
+inputCollections = [prefix+"ECalBarrelCells", prefix+"HCalBarrelCells", ]
+if calib:
+    inputCollections += ["GenParticles", "GenVertices"] 
 inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_constNoiseLevel.root"
 inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_segHcal_noiseLevelElectronicsPileup_mu"+str(puEvents)+".root"
 inputNeighboursMap = "/afs/cern.ch/work/c/cneubuse/public/FCChh/neighbours_map_segHcal.root"
 noSegmentationHCal = True
 
 if bFieldOff:
-    pileupNoisePath = "/afs/cern.ch/work/c/cneubuse/public/FCChh/noiseBarrel_mu"+str(puEvents)+".root"
+    pileupNoisePath = "/afs/cern.ch/work/c/cneubuse/public/FCChh/noBfield/noiseBarrel_mu"+str(puEvents)+".root"
     inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_noiseLevelElectronicsPileup_mu"+str(puEvents)+".root"
 
 ##############################################################################################################
@@ -260,9 +266,10 @@ inputTopoCellCollectionHCalBarrel = inputCellCollectionHCalBarrel
 if resegmentHCal:
     inputNeighboursMap = "/afs/cern.ch/work/c/cneubuse/public/FCChh/neighbours_map_barrel.root"
     inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_electronicsNoiseLevel.root"
-    inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_electronicsNoiseLevel_PU"+str(puEvents)+".root"
+    inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/resegmentedHCal/cellNoise_map_electronicsNoiseLevel_forPU"+str(puEvents)+"_recTopo.root"
     if bFieldOff:
-        inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_electronicsNoiseLevel_PU"+str(puEvents)+".root"
+        inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/noBfield/resegmentedHCal/cellNoise_map_electronicsNoiseLevel_forPU"+str(puEvents)+"_recTopo.root"
+        pileupNoisePath = "/afs/cern.ch/work/c/cneubuse/public/FCChh/noBfield/resegmentedHCal/noiseBarrel_mu"+str(puEvents)+".root"
     if not addedPU > 0:
         inputTopoCellCollectionHCalBarrel = "newHCalBarrelCells"
     hcalBarrelReadoutName = hcalBarrelReadoutNamePhiEta
@@ -326,23 +333,27 @@ if elNoise and not puNoise:
                                                  noiseTool = noiseEcalBarrel,
                                                  hits = inputCellCollectionECalBarrel,
                                                  cells = "ECalBarrelCellsNoise")
-
+    
+    # re-calibrate HCal Barrel cells to correct EM scale 
+    calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction= str(hadronSampl_hcal/emSampl_hcal))
     # HCal Barrel noise
-    noiseHcal = NoiseCaloCellsFlatTool("HCalNoise", cellNoise = 0.009)
+    noiseHcal = NoiseCaloCellsFlatTool("HCalNoise", cellNoise = 0.01)
     
     if resegmentHCal:
         createHcalBarrelCellsNoise = CreateCaloCells("CreateHCalBarrelCellsNoise",
                                                      geometryTool = barrelHcalGeometry,
-                                                     doCellCalibration = False, recalibrateBaseline =False,
+                                                     doCellCalibration = True, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
+                                                     calibTool = calibHcells,
                                                      noiseTool = noiseHcal)
         createHcalBarrelCellsNoise.hits.Path = inputTopoCellCollectionHCalBarrel
         createHcalBarrelCellsNoise.cells.Path = "HCalBarrelCellsNoise"
     else:
         createHcalBarrelCellsNoise = CreateCaloCells("CreateHCalBarrelCellsNoise",
                                                      geometryTool = hcalgeo,
-                                                     doCellCalibration = False, recalibrateBaseline =False,
+                                                     doCellCalibration = True, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
+                                                     calibTool = calibHcells,
                                                      noiseTool = noiseHcal)
         createHcalBarrelCellsNoise.hits.Path = inputTopoCellCollectionHCalBarrel
         createHcalBarrelCellsNoise.cells.Path = "HCalBarrelCellsNoise"
