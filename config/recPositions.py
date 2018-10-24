@@ -336,7 +336,7 @@ positionsHcalExtBarrel = CreateCellPositions("positionsHcalExtBarrel",
                                           OutputLevel = INFO)
 positionsHcalSegBarrel = CreateCellPositions("positionsSegHcalBarrel",
                                           positionsTool=HCalBsegcells,
-                                          hits = "newHCalBarrelCells",
+                                          hits = hcalBarrelCellsForPositions,
                                           positionedHits = "HCalBarrelCellPositions",
                                           OutputLevel = INFO)
 positionsHcalSegExtBarrel = CreateCellPositions("positionsSegHcalExtBarrel",
@@ -376,7 +376,7 @@ out = PodioOutput("out", OutputLevel=DEBUG)
 out.outputCommands = ["keep *","drop "+prefix+"ECalBarrelCells","drop "+prefix+"ECalEndcapCells","drop "+prefix+"ECalFwdCells","drop "+prefix+"HCalBarrelCells", "drop "+prefix+"HCalExtBarrelCells", "drop "+prefix+"HCalEndcapCells", "drop "+prefix+"HCalFwdCells"]
 if addMuons:
     out.outputCommands += ["drop TailCatcherCells"]
-out.filename = "edm.root"
+out.filename = output_name
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -405,15 +405,14 @@ if resegmentHCal and not noise:
         resegmentHcalExtBarrel,
         createHcalBarrelCells,
         createHcalExtBarrelCells,
+        positionsEcalBarrel,
+        positionsHcalSegBarrel,
         ]
 elif resegmentHCal and noise:
     list_of_algorithms += [
         posHcalBarrel,
         resegmentHcalBarrel,
         createHcalBarrelCells,
-        ]
-if noise and resegmentHCal:
-    list_of_algorithms += [
         createEcalBarrelCellsNoise,
         createHcalBarrelCellsNoise,
         positionsEcalBarrel,
@@ -426,9 +425,11 @@ elif noise and not resegmentHCal:
         positionsEcalBarrel,
         positionsHcalBarrel,
         ]
-elif not noise:
+else:
     list_of_algorithms += [rewriteECalEC,
                            rewriteHCalEC,
+                           positionsEcalBarrel,
+                           positionsHcalBarrel,
                            positionsEcalEndcap,
                            positionsEcalFwd,
                            positionsHcalEndcap,

@@ -84,6 +84,9 @@ def getJobInfo(argv):
         if '--noise' in argv:
             job_type += "electronicsNoise/"
             short_job_type += "_addNoise"
+        if '--addConeCut' in argv:
+            job_type += "coneCut/"
+            short_job_type += "_coneCut"
         return default_options,job_type,short_job_type,False
 
     elif '--recSlidingWindow' in argv:
@@ -203,7 +206,8 @@ if __name__=="__main__":
     parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
     parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv or '--addPileupNoise' in sys.argv or '--addPileupToSignal' in sys.argv, help='Pileup')
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
-    
+    parser.add_argument("--addConeCut", action='store_true', help="Add a cone-based cut for selection of cells/clusters.")
+    parser.add_argument("--cone", type=float, required = '--addConeCut' in sys.argv, help="Cone size within cells/clusters are included in output.")     
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
 
@@ -304,6 +308,10 @@ if __name__=="__main__":
         job_type += "/PU"+str(args.pileup)+"/"
     elif args.pileup:
         warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
+    
+    if args.addConeCut: #add cut on output selection around cone of genparticles 
+        job_type = job_type.replace("coneCut", "coneCut/"+str(args.cone))
+        short_job_type += "cone"+str(args.cone)
     
     if (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup and not args.addPileupNoise: # if reconstruction is run on pileup (mixed) events
         job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
@@ -605,11 +613,13 @@ if __name__=="__main__":
             else:
                 frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         if args.recPositions:
+            common_recPos_command = 'python %s/python/Convert.py %s $JOBDIR/cells_%s.root '%(current_dir,outfile,seed)
             if args.resegmentHCal:
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s --resegmentedHCal \n'%(current_dir,outfile))
-            else:
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s \n'%(current_dir,outfile))
-            frun.write('rm edm.root \n')
+                common_recPos_command += ' --resegmentedHCal '
+            if args.addConeCut:
+                common_recPos_command += ' --cone %f'%(args.cone)
+            frun.write(common_recPos_command)
+            frun.write('\n python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/cells_%s.root %s/%s\n'%(seed,outdir,outfile))
         elif args.recTopoClusters or args.recSlidingWindow:
             if args.resegmentHCal:
                 frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters_%s.root --resegmentedHCal \n'%(current_dir,outfile,seed))
@@ -626,7 +636,7 @@ if __name__=="__main__":
                     os.system("mkdir -p %s"%(ana_path))
                 frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s\n'%( ana_path+'/'+outfile ))
                 frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
-        if not args.no_eoscopy:
+        if not args.no_eoscopy and not args.recPositions:
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
             
         frun.write('rm $JOBDIR/%s \n'%(outfile))
