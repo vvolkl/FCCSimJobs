@@ -87,6 +87,8 @@ def getJobInfo(argv):
         if '--addConeCut' in argv:
             job_type += "coneCut/"
             short_job_type += "_coneCut"
+            if '--noSignal' in argv:
+                job_type += "/noSignal/"
         return default_options,job_type,short_job_type,False
 
     elif '--recSlidingWindow' in argv:
@@ -137,7 +139,7 @@ def getJobInfo(argv):
             job_type += "resegmentedHCal/"
             short_job_type += "_resegmHCal"
         if '--calibrate' in argv:
-            job_type += "/calibrated/08_2018/"
+            job_type += "/calibrated/11_2018/"
             short_job_type += "_calib"
         return default_options,job_type,short_job_type,False
     
@@ -208,6 +210,7 @@ if __name__=="__main__":
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
     parser.add_argument("--addConeCut", action='store_true', help="Add a cone-based cut for selection of cells/clusters.")
     parser.add_argument("--cone", type=float, required = '--addConeCut' in sys.argv, help="Cone size within cells/clusters are included in output.")     
+    parser.add_argument("--noSignal", action='store_true', help="In cone selection, select non-signal region (opposite eta of gen particle).")
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
 
@@ -396,10 +399,12 @@ if __name__=="__main__":
         warning("Please note that '--preparePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
     if args.recPositions and not args.local == "inits/reco.py":
         warning("Please note that '--recPositions' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
-    if args.recTopoClusters and not args.local == "inits/reco.py":
+    if args.recTopoClusters and not args.calibrate and not args.local == "inits/reco.py":
         warning("Please note that '--recTopoClusters' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
     if args.recTopoClusters and args.numEvents != -1:
         warning("Please note that '--recTopoClusters' is not run on all events available in simu (recommended: '--n -1')", True)
+    if args.calibrate and not args.local == "inits/calibrateCluster.py":
+        warning("Please note that '--calibrate' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/calibrateCluster.py')", True)
 
     # first make sure the output path for root files exists
     outdir = os.path.join( output_path, version, job_dir, job_type)
@@ -618,8 +623,11 @@ if __name__=="__main__":
                 common_recPos_command += ' --resegmentedHCal '
             if args.addConeCut:
                 common_recPos_command += ' --cone %f'%(args.cone)
+                if args.noSignal:
+                    common_recPos_command += ' --noSignal '
             frun.write(common_recPos_command)
             frun.write('\n python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/cells_%s.root %s/%s\n'%(seed,outdir,outfile))
+            frun.write('rm $JOBDIR/cells_%s.root \n'%(seed))
         elif args.recTopoClusters or args.recSlidingWindow:
             if args.resegmentHCal:
                 frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters_%s.root --resegmentedHCal \n'%(current_dir,outfile,seed))

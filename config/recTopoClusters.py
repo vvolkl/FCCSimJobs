@@ -50,12 +50,22 @@ print "no B field: ", bFieldOff
 # correct EM calibration of hcal cells                                                                                                                                                    
 hadronSampl_hcal = 0.024
 emSampl_hcal = 0.0255
+# Paramerters for cluster calibration                                                                                                                                         
+# Bfield on:
+benchmark_a = 0.996
+benchmark_b = 0.565
+benchmark_c = -7.4E-6
+benchmark_d = 0. #-.92
+benchmark_e = 1. #0.9697
+benchmark_f = 1. #1./0.9956
 if bFieldOff:
     emSampl_hcal = 0.0249
-# Paramerters for cluster calibration                                                                                                                                         
-benchmark_a = 1.07
-benchmark_b = 0.76
-benchmark_c = -1.9E-5
+    benchmark_a = 1.062
+    benchmark_b = 0.659
+    benchmark_c = -6.3E-6
+    benchmark_d = 0. #-.83
+    benchmark_e = 1. #0.9834
+    benchmark_f = 1. #1./0.9973
 # from minimisation (bFieldOn, C=0): 0.975799,-2.54738e-06,0.822663,-0.140975,-2.18657e-05,-0.0193682
 a1 = 0.975799
 a2 = -2.54738e-06
@@ -436,18 +446,16 @@ if elNoise and not puNoise:
                                                     positionsHCalNoSegTool = HCalBcellVols,
                                                     noSegmentationHCal = noSegmentationHCal,
                                                     calibrate = True, # will not re-calibrate the ECal, but HCal cells are scaled to EM
-                                                    eDepCryoCorrection = True,
+                                                    cryoCorrection = True,
+                                                    eDepCryoCorrection = False,
                                                     ehECal = 1.,
-                                                    ehHCal = 1.1,
-                                                    a1 = a1,
-                                                    a2 = a2,
-                                                    a3 = a3,
-                                                    b1 = b1,
-                                                    b2 = b2,
-                                                    b3 = b3,
-                                                    c1 = c1,
-                                                    c2 = c2,
-                                                    c3 = c3,
+                                                    ehHCal = 1.,
+                                                    a = benchmark_a,
+                                                    b = benchmark_b,
+                                                    c = benchmark_c,
+                                                    d = benchmark_d,
+                                                    e = benchmark_e,
+                                                    f = benchmark_f,
                                                     fractionECal = fractionECal)
 
         THistSvc().Output = ["rec DATAFILE='calibrateCluster_histograms.root' TYP='ROOT' OPT='RECREATE'"]
@@ -741,7 +749,8 @@ list_of_algorithms += [out]
 ApplicationMgr(
     TopAlg = list_of_algorithms,
     EvtSel = 'NONE',
-    EvtMax   = num_events,
+    # test if set first ev 
+    EvtMax = num_events,
     ExtSvc = [geoservice, podioevent],
-#    OutputLevel = DEBUG
+    #    OutputLevel = DEBUG
 )
