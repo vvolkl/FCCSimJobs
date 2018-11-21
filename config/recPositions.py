@@ -181,7 +181,7 @@ createHcalExtBarrelCells = CreateCaloCells("CreateHCalExtBarrelCells",
                                            hits="HCalExtBarrelCellsStep2",
                                            cells="newHCalExtBarrelCells")
 if resegmentHCal:
-    hcalBarrelCellsForPositions = "newHCalExtBarrelCells"
+    hcalBarrelCellsForPositions = "newHCalBarrelCells"
 
 ##############################################################################################################                                                                            
 #######                                       GEOMETRIES                                     #############                                                                             
@@ -439,6 +439,8 @@ if addMuons:
     list_of_algorithms += [positionsTailCatcher]
 
 list_of_algorithms += [out]
+
+print list_of_algorithms
 
 ApplicationMgr(
     TopAlg = list_of_algorithms,

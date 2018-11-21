@@ -152,343 +152,347 @@ outtree.Branch("gen_bits", gen_bits)
 
 numEvent = 0
 with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_pythia.py
-    event = evs[0]
-    ev_num[0] = numEvent
-    numHits = 0
-    E = .0
-    Ebench = .0
-    Eem = .0
-    Ehad = .0
-    EemLast = .0
-    EhadFirst = .0
-    etaGen = .0
-    phiGen = .0
-    energyGen = .0 
-
-    for g in event.get("GenParticles"):
-        if g.status() == 1:
-            position = r.TVector3(g.p4().px,g.p4().py,g.p4().pz)
-
-            gen_x.push_back(g.startVertex().x()/10.)
-            gen_y.push_back(g.startVertex().y()/10.)
-            gen_z.push_back(g.startVertex().z()/10.)
-
-            pt=math.sqrt(g.p4().px**2+g.p4().py**2)
-            eta=position.Eta()
-            phi=position.Phi()
-            
-            tlv=r.TLorentzVector()
-            tlv.SetPtEtaPhiM(pt,eta,phi,g.p4().mass)
-            gen_pt.push_back(pt)
-            gen_eta.push_back(eta)
-            gen_phi.push_back(phi)
-            gen_energy.push_back(math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2))
-            gen_bits.push_back(g.bits())
-
-            etaGen += eta*math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
-            phiGen += phi*math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
-            energyGen += math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
-
-            if math.fabs(tlv.E()-math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2))>0.01 and g.status==1:
-                print '=======================etlv  ',tlv.E(),'    ',math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2),'  eta  ',eta,'   phi   ',phi,'  x  ',g.p4().px,'  y  ',g.p4().py,'  z  ',g.p4().pz
-            gen_pdgid.push_back(g.pdgId())
-            gen_status.push_back(g.status())
-            
-    if energyGen != 0.:
-        etaGen = float(etaGen)/float(energyGen)
-        phiGen = float(phiGen)/float(energyGen)
+    for ev in evs:
         
-    if args.noSignal:
-        etaGen = -etaGen
-        phiGen = -phiGen
-
-    print 'gen particle:  ', etaGen,phiGen,energyGen
-    
-    if event.get("caloClustersBarrel"):
-        print 'Using cluster collection "caloClustersBarrel" '
-        for c in event.get("caloClustersBarrel"):
-            position = r.TVector3(c.position().x,c.position().y,c.position().z)
-            if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                cluster_ene.push_back(c.energy())
-                cluster_eta.push_back(position.Eta())
-                cluster_phi.push_back(position.Phi())
-                cluster_pt.push_back(c.energy()*position.Unit().Perp())
-                cluster_x.push_back(c.position().x/10.)
-                cluster_y.push_back(c.position().y/10.)
-                cluster_z.push_back(c.position().z/10.)
-                cluster_cells.push_back(c.hits_size())
-
-    elif event.get("calibCaloClustersBarrelNoise"):
-        print 'Using cluster collection "calibCaloClustersBarrelNoise" '
-        for c in event.get("calibCaloClustersBarrelNoise"):
-            position = r.TVector3(c.position().x,c.position().y,c.position().z)
-            if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                cluster_ene.push_back(c.energy())
-                cluster_eta.push_back(position.Eta())
-                cluster_phi.push_back(position.Phi())
-                cluster_pt.push_back(c.energy()*position.Unit().Perp())
-                cluster_x.push_back(c.position().x/10.)
-                cluster_y.push_back(c.position().y/10.)
-                cluster_z.push_back(c.position().z/10.)
-                cluster_cells.push_back(c.hits_size())
-
-    elif event.get("caloClustersBarrelNoise"):
-        print 'Using cluster collection "caloClustersBarrelNoise" '
-        for c in event.get("caloClustersBarrelNoise"):
-            position = r.TVector3(c.position().x,c.position().y,c.position().z)
-            if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                cluster_ene.push_back(c.energy())
-                cluster_eta.push_back(position.Eta())
-                cluster_phi.push_back(position.Phi())
-                cluster_pt.push_back(c.energy()*position.Unit().Perp())
-                cluster_x.push_back(c.position().x/10.)
-                cluster_y.push_back(c.position().y/10.)
-                cluster_z.push_back(c.position().z/10.)
-                cluster_cells.push_back(c.hits_size())
-
-    elif event.get("caloClusters"):
-        print 'Using cluster collection "caloClusters" '
-        for c in event.get("caloClusters"):
-            position = r.TVector3(c.position().x,c.position().y,c.position().z)
-            if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                cluster_ene.push_back(c.energy())
-                cluster_eta.push_back(position.Eta())
-                cluster_phi.push_back(position.Phi())
-                cluster_pt.push_back(c.energy()*position.Unit().Perp())
-                cluster_x.push_back(c.position().x/10.)
-                cluster_y.push_back(c.position().y/10.)
-                cluster_z.push_back(c.position().z/10.)
-                cluster_cells.push_back(c.hits_size())
-
-    elif event.get("caloClustersNoise"):
-        print 'Using cluster collection "caloClustersNoise" '
-        for c in event.get("caloClustersNoise"):
-            position = r.TVector3(c.position().x,c.position().y,c.position().z)
-            if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                cluster_ene.push_back(c.energy())
-                cluster_eta.push_back(position.Eta())
-                cluster_phi.push_back(position.Phi())
-                cluster_pt.push_back(c.energy()*position.Unit().Perp())
-                cluster_x.push_back(c.position().x/10.)
-                cluster_y.push_back(c.position().y/10.)
-                cluster_z.push_back(c.position().z/10.)
-                cluster_cells.push_back(c.hits_size())
-
-    else:
-        if event.get("HCalBarrelCellPositions"):
-            for c in event.get("HCalBarrelCellPositions"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(hcalBarrel_decoder.get(c.cellId(), "layer") + lastECalBarrelLayer + 1)
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    if hcalBarrel_decoder["layer"] == 0:
-                        EhadFirst += c.energy()
-                    E += c.energy()
-                    Ehad += c.energy()
-                    numHits += 1
-    
-        if event.get("ECalBarrelCellPositions"):
-            for c in event.get("ECalBarrelCellPositions"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(ecalBarrel_decoder.get(c.cellId(), "layer"))
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    if ecalBarrel_decoder["layer"] == lastECalBarrelLayer:
-                        EemLast += c.energy()
-                    E += c.energy()
-                    Eem += c.energy()
-                    numHits += 1
+        ev_num[0] = numEvent
+        numHits = 0
+        E = .0
+        Ebench = .0
+        Eem = .0
+        Ehad = .0
+        EemLast = .0
+        EhadFirst = .0
+        etaGen = .0
+        phiGen = .0
+        energyGen = .0 
+        
+        if ev.get("GenParticles"):
+            for g in ev.get("GenParticles"):
+                if g.status() == 1:
+                    position = r.TVector3(g.p4().px,g.p4().py,g.p4().pz)
                     
-        if event.get("HCalExtBarrelCellPositions"):
-            for c in event.get("HCalExtBarrelCellPositions"):
+                    gen_x.push_back(g.startVertex().x()/10.)
+                    gen_y.push_back(g.startVertex().y()/10.)
+                    gen_z.push_back(g.startVertex().z()/10.)
+                    
+                    pt=math.sqrt(g.p4().px**2+g.p4().py**2)
+                    eta=position.Eta()
+                    phi=position.Phi()
+                    
+                    tlv=r.TLorentzVector()
+                    tlv.SetPtEtaPhiM(pt,eta,phi,g.p4().mass)
+                    gen_pt.push_back(pt)
+                    gen_eta.push_back(eta)
+                    gen_phi.push_back(phi)
+                    gen_energy.push_back(math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2))
+                    gen_bits.push_back(g.bits())
+                    
+                    etaGen += eta*math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
+                    phiGen += phi*math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
+                    energyGen += math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2)
+                    
+                    if math.fabs(tlv.E()-math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2))>0.01 and g.status==1:
+                        print '=======================etlv  ',tlv.E(),'    ',math.sqrt(g.p4().mass**2+g.p4().px**2+g.p4().py**2+g.p4().pz**2),'  eta  ',eta,'   phi   ',phi,'  x  ',g.p4().px,'  y  ',g.p4().py,'  z  ',g.p4().pz
+                        gen_pdgid.push_back(g.pdgId())
+                        gen_status.push_back(g.status())
+                        
+                    if energyGen != 0.:
+                        etaGen = float(etaGen)/float(energyGen)
+                        phiGen = float(phiGen)/float(energyGen)
+                        
+                    if args.noSignal:
+                        etaGen = -etaGen
+                        phiGen = -phiGen
+
+            print 'gen particle:  ', etaGen,phiGen,energyGen
+    
+        if ev.get("caloClustersBarrel"):
+            print 'Using cluster collection "caloClustersBarrel" '
+            for c in ev.get("caloClustersBarrel"):
                 position = r.TVector3(c.position().x,c.position().y,c.position().z)
                 if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(hcalExtBarrel_decoder.get(c.cellId(), "layer") + lastECalBarrelLayer + 1)
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
+                    cluster_ene.push_back(c.energy())
+                    cluster_eta.push_back(position.Eta())
+                    cluster_phi.push_back(position.Phi())
+                    cluster_pt.push_back(c.energy()*position.Unit().Perp())
+                    cluster_x.push_back(c.position().x/10.)
+                    cluster_y.push_back(c.position().y/10.)
+                    cluster_z.push_back(c.position().z/10.)
+                    cluster_cells.push_back(c.hits_size())
+    
+        elif ev.get("calibCaloClustersBarrelNoise"):
+            print 'Using cluster collection "calibCaloClustersBarrelNoise" '
+            for c in ev.get("calibCaloClustersBarrelNoise"):
+                position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                    cluster_ene.push_back(c.energy())
+                    cluster_eta.push_back(position.Eta())
+                    cluster_phi.push_back(position.Phi())
+                    cluster_pt.push_back(c.energy()*position.Unit().Perp())
+                    cluster_x.push_back(c.position().x/10.)
+                    cluster_y.push_back(c.position().y/10.)
+                    cluster_z.push_back(c.position().z/10.)
+                    cluster_cells.push_back(c.hits_size())
+                    
+        elif ev.get("caloClustersBarrelNoise"):
+            print 'Using cluster collection "caloClustersBarrelNoise" '
+            for c in ev.get("caloClustersBarrelNoise"):
+                position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                    cluster_ene.push_back(c.energy())
+                    cluster_eta.push_back(position.Eta())
+                    cluster_phi.push_back(position.Phi())
+                    cluster_pt.push_back(c.energy()*position.Unit().Perp())
+                    cluster_x.push_back(c.position().x/10.)
+                    cluster_y.push_back(c.position().y/10.)
+                    cluster_z.push_back(c.position().z/10.)
+                    cluster_cells.push_back(c.hits_size())
+
+        elif ev.get("caloClusters"):
+            print 'Using cluster collection "caloClusters" '
+            for c in ev.get("caloClusters"):
+                position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                    cluster_ene.push_back(c.energy())
+                    cluster_eta.push_back(position.Eta())
+                    cluster_phi.push_back(position.Phi())
+                    cluster_pt.push_back(c.energy()*position.Unit().Perp())
+                    cluster_x.push_back(c.position().x/10.)
+                    cluster_y.push_back(c.position().y/10.)
+                    cluster_z.push_back(c.position().z/10.)
+                    cluster_cells.push_back(c.hits_size())
+
+        elif ev.get("caloClustersNoise"):
+            print 'Using cluster collection "caloClustersNoise" '
+            for c in ev.get("caloClustersNoise"):
+                position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                    cluster_ene.push_back(c.energy())
+                    cluster_eta.push_back(position.Eta())
+                    cluster_phi.push_back(position.Phi())
+                    cluster_pt.push_back(c.energy()*position.Unit().Perp())
+                    cluster_x.push_back(c.position().x/10.)
+                    cluster_y.push_back(c.position().y/10.)
+                    cluster_z.push_back(c.position().z/10.)
+                    cluster_cells.push_back(c.hits_size())
+                    
+        else:
+            if ev.get("HCalBarrelCellPositions"):
+                print 'Using cell collection "HCalBarrelCellPositions" '
+                for c in ev.get("HCalBarrelCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(hcalBarrel_decoder.get(c.cellId(), "layer") + lastECalBarrelLayer + 1)
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        if hcalBarrel_decoder["layer"] == 0:
+                            EhadFirst += c.energy()
+                        E += c.energy()
+                        Ehad += c.energy()
+                        numHits += 1
+                        
+            if ev.get("ECalBarrelCellPositions"):
+                print 'Using cell collection "ECalBarrelCellPositions" '
+                for c in ev.get("ECalBarrelCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(ecalBarrel_decoder.get(c.cellId(), "layer"))
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        if ecalBarrel_decoder["layer"] == lastECalBarrelLayer:
+                            EemLast += c.energy()
+                        E += c.energy()
+                        Eem += c.energy()
+                        numHits += 1
+                    
+            if ev.get("HCalExtBarrelCellPositions"):
+                for c in ev.get("HCalExtBarrelCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(hcalExtBarrel_decoder.get(c.cellId(), "layer") + lastECalBarrelLayer + 1)
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
             
-        if event.get("ECalEndcapCellPositions"):
-            for c in event.get("ECalEndcapCellPositions"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+            if ev.get("ECalEndcapCellPositions"):
+                for c in ev.get("ECalEndcapCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(ecalEndcap_decoder.get(c.cellId(), "layer"))
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
+                        
+            if ev.get("HCalEndcapCellPositions"):
+                for c in ev.get("HCalEndcapCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(hcalEndcap_decoder.get(c.cellId(), "layer") + lastECalEndcapLayer + 1)
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
+                        
+            if ev.get("ECalFwdCellPositions"):
+                for c in ev.get("ECalFwdCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(ecalFwd_decoder.get(c.cellId(), "layer"))
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
+                    
+            if ev.get("HCalFwdCellPositions"):
+                for c in ev.get("HCalFwdCellPositions"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(hcalFwd_decoder.get(c.cellId(), "layer") + lastECalFwdLayer + 1)
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
+
+
+            if ev.get("HCalPositionedHits"):
+                for c in ev.get("HCalPositionedHits"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
+                    if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
+                        rec_ene.push_back(c.energy())
+                        rec_eta.push_back(position.Eta())
+                        rec_phi.push_back(position.Phi())
+                        rec_pt.push_back(c.energy()*position.Unit().Perp())
+                        rec_layer.push_back(ecalFwd_decoder.get(c.cellId(), "layer"))
+                        rec_x.push_back(c.position().x/10.)
+                        rec_y.push_back(c.position().y/10.)
+                        rec_z.push_back(c.position().z/10.)
+                        rec_detid.push_back(systemID(c.cellId()))
+                        rec_bits.push_back(c.bits())
+                        E += c.energy()
+                        numHits += 1
+
+            if ev.get("TrackerPositionedHits"):
+                for c in ev.get("TrackerPositionedHits"):
+                    position = r.TVector3(c.position().x,c.position().y,c.position().z)
                     rec_ene.push_back(c.energy())
                     rec_eta.push_back(position.Eta())
                     rec_phi.push_back(position.Phi())
                     rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(ecalEndcap_decoder.get(c.cellId(), "layer"))
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
-
-        if event.get("HCalEndcapCellPositions"):
-            for c in event.get("HCalEndcapCellPositions"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(hcalEndcap_decoder.get(c.cellId(), "layer") + lastECalEndcapLayer + 1)
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
-                
-        if event.get("ECalFwdCellPositions"):
-            for c in event.get("ECalFwdCellPositions"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(ecalFwd_decoder.get(c.cellId(), "layer"))
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
-
-        if event.GetBranchStatus("HCalFwdCellPositions"):
-            for c in event.HCalFwdCellPositions:
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(hcalFwd_decoder.get(c.cellId(), "layer") + lastECalFwdLayer + 1)
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
-
-
-        if event.get("HCalPositionedHits"):
-            for c in event.get("HCalPositionedHits"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                if (cone>0 and float(math.sqrt(math.pow((position.Eta()-etaGen), 2)+math.pow((position.Phi()-phiGen), 2))) < cone) or cone<0:
-                    rec_ene.push_back(c.energy())
-                    rec_eta.push_back(position.Eta())
-                    rec_phi.push_back(position.Phi())
-                    rec_pt.push_back(c.energy()*position.Unit().Perp())
-                    rec_layer.push_back(ecalFwd_decoder.get(c.cellId(), "layer"))
-                    rec_x.push_back(c.position().x/10.)
-                    rec_y.push_back(c.position().y/10.)
-                    rec_z.push_back(c.position().z/10.)
-                    rec_detid.push_back(systemID(c.cellId()))
-                    rec_bits.push_back(c.bits())
-                    E += c.energy()
-                    numHits += 1
-
-        if event.get("TrackerPositionedHits"):
-            for c in event.get("TrackerPositionedHits"):
-                position = r.TVector3(c.position().x,c.position().y,c.position().z)
-                rec_ene.push_back(c.energy())
-                rec_eta.push_back(position.Eta())
-                rec_phi.push_back(position.Phi())
-                rec_pt.push_back(c.energy()*position.Unit().Perp())
-                sysID = systemID(c.cellId())
-                if  sysID == 0 :
-                    rec_layer.push_back(trackerBarrel_decoder["layer"])
-                elif sysID == 1 :
-                    rec_layer.push_back(trackerBarrel_decoder["layer"] + lastInnerTrackerBarrelLayer + 1)
-                elif sysID == 2 :
-                    posneg = trackerEndcap_decoder["posneg"]
-                    if posneg == 0 :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerBarrelLayer + 1)
+                    sysID = systemID(c.cellId())
+                    if  sysID == 0 :
+                        rec_layer.push_back(trackerBarrel_decoder["layer"])
+                    elif sysID == 1 :
+                        rec_layer.push_back(trackerBarrel_decoder["layer"] + lastInnerTrackerBarrelLayer + 1)
+                    elif sysID == 2 :
+                        posneg = trackerEndcap_decoder["posneg"]
+                        if posneg == 0 :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerBarrelLayer + 1)
+                        else :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerPosECapLayer + 1)
+                    elif sysID == 3:
+                        posneg = trackerEndcap_decoder["posneg"]
+                        if posneg == 0 :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerNegECapLayer + 1)
+                        else :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerPosECapLayer + 1)
                     else :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerPosECapLayer + 1)
-                elif sysID == 3:
-                    posneg = trackerEndcap_decoder["posneg"]
-                    if posneg == 0 :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastInnerTrackerNegECapLayer + 1)
-                    else :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerPosECapLayer + 1)
-                else :
-                    posneg = trackerEndcap_decoder["posneg"]
-                    if posneg == 0 :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerNegECapLayer + 1)
-                    else :
-                        rec_layer.push_back(trackerEndcap_decoder["disc"] + lastFwdTrackerPosECapLayer + 1)
-                rec_x.push_back(c.position().x/10.)
-                rec_y.push_back(c.position().y/10.)
-                rec_z.push_back(c.position().z/10.)
-                rec_detid.push_back(systemID(c.cellId()))
-                rec_bits.push_back(c.bits())
-                E += c.energy()
-                numHits += 1
-
-    ev_ebench[0] = benchmarkCorr(Eem,EemLast,Ehad,EhadFirst,a,b,c1)
-    ev_e[0] = E
-    ev_nRechits[0] = numHits
-    
-    outtree.Fill()
-
-    gen_eta.clear()
-    gen_phi.clear()
-    gen_pt.clear()
-    gen_energy.clear()
-    gen_pdgid.clear()
-    gen_status.clear()
-
-    cluster_eta.clear()
-    cluster_phi.clear()
-    cluster_pt.clear()
-    cluster_ene.clear()
-    cluster_x.clear()
-    cluster_y.clear()
-    cluster_z.clear()
-    
-    rec_eta.clear()
-    rec_phi.clear()
-    rec_pt.clear()
-    rec_ene.clear()
-    rec_layer.clear()
-    rec_x.clear()
-    rec_y.clear()
-    rec_z.clear()
-    rec_detid.clear()
-    rec_bits.clear()
-    
-    numEvent += 1
+                        posneg = trackerEndcap_decoder["posneg"]
+                        if posneg == 0 :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastOuterTrackerNegECapLayer + 1)
+                        else :
+                            rec_layer.push_back(trackerEndcap_decoder["disc"] + lastFwdTrackerPosECapLayer + 1)
+                            rec_x.push_back(c.position().x/10.)
+                            rec_y.push_back(c.position().y/10.)
+                            rec_z.push_back(c.position().z/10.)
+                            rec_detid.push_back(systemID(c.cellId()))
+                            rec_bits.push_back(c.bits())
+                            E += c.energy()
+                            numHits += 1
+                            
+        ev_ebench[0] = benchmarkCorr(Eem,EemLast,Ehad,EhadFirst,a,b,c1)
+        ev_e[0] = E
+        ev_nRechits[0] = numHits
+        
+        outtree.Fill()
+        
+        gen_eta.clear()
+        gen_phi.clear()
+        gen_pt.clear()
+        gen_energy.clear()
+        gen_pdgid.clear()
+        gen_status.clear()
+        
+        cluster_eta.clear()
+        cluster_phi.clear()
+        cluster_pt.clear()
+        cluster_ene.clear()
+        cluster_x.clear()
+        cluster_y.clear()
+        cluster_z.clear()
+        
+        rec_eta.clear()
+        rec_phi.clear()
+        rec_pt.clear()
+        rec_ene.clear()
+        rec_layer.clear()
+        rec_x.clear()
+        rec_y.clear()
+        rec_z.clear()
+        rec_detid.clear()
+        rec_bits.clear()
+        
+        numEvent += 1
 
 outfile.Write()
 outfile.Close()
