@@ -9,6 +9,7 @@ simparser.add_argument("--addMuons", action='store_true', help="Add tail catcher
 simparser.add_argument("--resegmentHCal", action='store_true', help="Merge HCal cells in DeltaEta=0.025 bins", default = False)
 simparser.add_argument('--detectorPath', type=str, help='Path to detectors', default = "/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj")
 simparser.add_argument("--addElectronicsNoise", action='store_true', help="Add electronics noise (default: false)")
+simparser.add_argument('--cone', type=float, help='Pre-selection of to be clustered cells.')
 
 simargs, _ = simparser.parse_known_args()
 
@@ -29,6 +30,10 @@ print "output name: ", output_name
 print "prefix added to the collections' name: ", prefix
 print "Muons: ", addMuons
 print "resegment HCal: ", resegmentHCal
+cone = -1.
+if simargs.cone:
+    cone = simargs.cone
+    print "Cells selected within cone of R < ", cone
 
 from Gaudi.Configuration import *
 ##############################################################################################################
@@ -63,6 +68,13 @@ tailCatcherReadoutName = "Muons_Readout"
 # cell collections used for positions reco
 ecalBarrelCellsForPositions = prefix+"ECalBarrelCells"
 hcalBarrelCellsForPositions = prefix+"HCalBarrelCells"
+hcalExtBarrelCellsForPositions = prefix+"HCalExtBarrelCells"
+# cell collections used to add noise
+ecalBarrelCellsForNoise = ecalBarrelCellsForPositions
+hcalBarrelCellsForNoise = hcalBarrelCellsForPositions
+# cell collections used to add noise
+ecalBarrelCellsForSelection = ecalBarrelCellsForPositions
+hcalBarrelCellsForSelection = hcalBarrelCellsForPositions
 
 # Geometry details to add noise to every Calo cell and paths to root files that have the noise const per cell
 ecalBarrelNoisePath = "/afs/cern.ch/user/a/azaborow/public/FCCSW/elecNoise_ecalBarrel_50Ohm_traces2_2shieldWidth_noise.root"
@@ -138,7 +150,7 @@ from Configurables import CreateVolumeCaloPositions,RedoSegmentation,CreateCaloC
 # 3. step - merge new cells corresponding to eta-phi segmentation
 # Hcal barrel cell positions
                    
-posHcalBarrel = CreateVolumeCaloPositions("posBarrelHcal", OutputLevel = INFO)
+posHcalBarrel = CreateVolumeCaloPositions("posBarrelHcal")
 posHcalBarrel.hits.Path = hcalCells
 posHcalBarrel.positionedHits.Path = "HCalBarrelPositions"
 # Use Phi-Eta segmentation in Hcal barrel       
@@ -149,18 +161,16 @@ resegmentHcalBarrel = RedoSegmentation("ReSegmentationHcal",
                                        oldSegmentationIds = ["module","row"],
                                        # new bitfield (readout), with new segmentation                   
                                        newReadoutName = hcalBarrelReadoutNamePhiEta,
-                                       OutputLevel = INFO,
                                        inhits = "HCalBarrelPositions",
                                        outhits = "HCalBarrelCellsStep2")
 createHcalBarrelCells = CreateCaloCells("CreateHCalBarrelCells",
                                         doCellCalibration=False, recalibrateBaseline =False,
                                         addCellNoise=False, filterCellNoise=False,
-                                        OutputLevel=DEBUG,
                                         hits="HCalBarrelCellsStep2",
                                         cells="newHCalBarrelCells")
 
 # Ext Hcal barrel cell positions
-posHcalExtBarrel = CreateVolumeCaloPositions("posExtBarrelHcal", OutputLevel = INFO)
+posHcalExtBarrel = CreateVolumeCaloPositions("posExtBarrelHcal")
 posHcalExtBarrel.hits.Path = hcalExtCells
 posHcalExtBarrel.positionedHits.Path = "HCalExtBarrelPositions"
 # Use Phi-Eta segmentation in Hcal barrel       
@@ -171,17 +181,17 @@ resegmentHcalExtBarrel = RedoSegmentation("ReSegmentationHcalExt",
                                           oldSegmentationIds = ["module","row"],
                                           # new bitfield (readout), with new segmentation                   
                                           newReadoutName = hcalExtBarrelReadoutNamePhiEta,
-                                          OutputLevel = INFO,
                                           inhits = "HCalExtBarrelPositions",
                                           outhits = "HCalExtBarrelCellsStep2")
 createHcalExtBarrelCells = CreateCaloCells("CreateHCalExtBarrelCells",
                                            doCellCalibration=False, recalibrateBaseline =False,
                                            addCellNoise=False, filterCellNoise=False,
-                                           OutputLevel=INFO,
                                            hits="HCalExtBarrelCellsStep2",
                                            cells="newHCalExtBarrelCells")
 if resegmentHCal:
+    hcalBarrelCellsForNoise = "newHCalBarrelCells"
     hcalBarrelCellsForPositions = "newHCalBarrelCells"
+    hcalExtBarrelCellsForPositions = "newHCalExtBarrelCells"
 
 ##############################################################################################################                                                                            
 #######                                       GEOMETRIES                                     #############                                                                             
@@ -216,7 +226,7 @@ barrelHcalGeometry = LayerPhiEtaCaloTool("BarrelHcalGeo",
                                          )
 
 ##############################################################################################################
-#######                                       CELL POSITIONS                                     #############
+#######                                       CELL POSITION TOOLS                                #############
 ##############################################################################################################
 
 #Configure tools for calo cell positions
@@ -268,14 +278,21 @@ if addMuons:
                                                     readoutName = tailCatcherReadoutName,
                                                     centralRadius = 901.5,
                                                     OutputLevel = INFO)
+# hcal cell positions tool
+hcalCellPositionsTool = HCalBcells
+if resegmentHCal:
+    hcalCellPositionsTool = HCalBsegcells
 
 ##############################################################################################################
 #######                                       NOISE                                     #############
 ##############################################################################################################
+print 'Cell collections for adding noise: ', ecalBarrelCellsForNoise, hcalBarrelCellsForNoise
 
 if noise:
     ecalBarrelCellsForPositions = "ECalBarrelCellsNoise"
     hcalBarrelCellsForPositions = "HCalBarrelCellsNoise"
+    ecalBarrelCellsForSelection = "ECalBarrelCellsNoise"
+    hcalBarrelCellsForSelection = "HCalBarrelCellsNoise"
 
     from Configurables import CreateCaloCells, NoiseCaloCellsFromFileTool, CalibrateCaloHitsTool, NoiseCaloCellsFlatTool
     # ECal Barrel noise
@@ -293,7 +310,7 @@ if noise:
                                                  doCellCalibration=False, recalibrateBaseline =False, # already calibrated                                                                  
                                                  addCellNoise=True, filterCellNoise=False,
                                                  noiseTool = noiseEcalBarrel,
-                                                 hits = ecalCells,
+                                                 hits = ecalBarrelCellsForNoise,
                                                  cells = "ECalBarrelCellsNoise")
     
     # HCal Barrel noise                                                                                                                                                              
@@ -305,7 +322,7 @@ if noise:
                                                      doCellCalibration = False, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
                                                      noiseTool = noiseHcal)
-        createHcalBarrelCellsNoise.hits.Path = "newHCalBarrelCells"
+        createHcalBarrelCellsNoise.hits.Path = hcalBarrelCellsForNoise
         createHcalBarrelCellsNoise.cells.Path = "HCalBarrelCellsNoise"
     else:
         createHcalBarrelCellsNoise = CreateCaloCells("CreateHCalBarrelCellsNoise",
@@ -313,9 +330,36 @@ if noise:
                                                      doCellCalibration = False, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
                                                      noiseTool = noiseHcal)
-        createHcalBarrelCellsNoise.hits.Path = hcalCells
+        createHcalBarrelCellsNoise.hits.Path = hcalBarrelCellsForNoise
         createHcalBarrelCellsNoise.cells.Path = "HCalBarrelCellsNoise"
 
+##############################################################################################################
+#######                                       CELL SELECTION                                     #############
+##############################################################################################################
+if simargs.cone:
+    print 'Cell collections for cone selection: ', ecalBarrelCellsForSelection, hcalBarrelCellsForSelection
+    print 'HCal Cell posiitons tool for cone selection: ', hcalCellPositionsTool
+    # Select cells before running clustering
+    from Configurables import ConeSelection
+    selectionECalBarrel = ConeSelection("selectionECalBarrel",
+                                        cells = ecalBarrelCellsForSelection,
+                                        particles = "GenParticles",
+                                        selCells = "selectedECalBarrelCells",
+                                        positionsTool = ECalBcells,
+                                        radius = cone,
+                                        OutputLevel = INFO)
+    selectionHCalBarrel = ConeSelection("selectionHCalBarrel",
+                                        cells = hcalBarrelCellsForSelection,
+                                        particles = "GenParticles",
+                                        selCells = "selectedHCalBarrelCells",
+                                        positionsTool = hcalCellPositionsTool,
+                                        radius = cone,
+                                        OutputLevel = INFO)
+
+    ecalBarrelCellsForPositions = "selectedECalBarrelCells"
+    hcalBarrelCellsForPositions = "selectedHCalBarrelCells"
+
+print 'Cell collections for cell positions: ', ecalBarrelCellsForPositions, hcalBarrelCellsForPositions
 
 # cell positions
 from Configurables import CreateCellPositions
@@ -341,7 +385,7 @@ positionsHcalSegBarrel = CreateCellPositions("positionsSegHcalBarrel",
                                           OutputLevel = INFO)
 positionsHcalSegExtBarrel = CreateCellPositions("positionsSegHcalExtBarrel",
                                           positionsTool=HCalExtBsegcells,
-                                          hits = hcalBarrelCellsForPositions,
+                                          hits = hcalExtBarrelCellsForPositions,
                                           positionedHits = "HCalExtBarrelCellPositions",
                                           OutputLevel = INFO)
 positionsEcalEndcap = CreateCellPositions("positionsEcalEndcap",
@@ -373,7 +417,7 @@ if addMuons:
 
 # PODIO algorithm
 out = PodioOutput("out", OutputLevel=DEBUG)
-out.outputCommands = ["keep *","drop "+prefix+"ECalBarrelCells","drop "+prefix+"ECalEndcapCells","drop "+prefix+"ECalFwdCells","drop "+prefix+"HCalBarrelCells", "drop "+prefix+"HCalExtBarrelCells", "drop "+prefix+"HCalEndcapCells", "drop "+prefix+"HCalFwdCells"]
+out.outputCommands = ["drop *", "keep GenParticles", "keep GenVertices", "keep ECalBarrelCellPositions","keep ECalEndcapCellPositions","keep ECalFwdCellPositions","keep HCalBarrelCellPositions", "keep HCalExtBarrelCellPositions", "keep HCalEndcapCellPositions", "keep HCalFwdCellPositions"]
 if addMuons:
     out.outputCommands += ["drop TailCatcherCells"]
 out.filename = output_name
@@ -405,8 +449,14 @@ if resegmentHCal and not noise:
         resegmentHcalExtBarrel,
         createHcalBarrelCells,
         createHcalExtBarrelCells,
+        ]
+    if simargs.cone:
+        list_of_algorithms += [selectionECalBarrel,
+                               selectionHCalBarrel,]
+    list_of_algorithms += [
         positionsEcalBarrel,
         positionsHcalSegBarrel,
+        positionsHcalSegExtBarrel,
         ]
 elif resegmentHCal and noise:
     list_of_algorithms += [
@@ -415,26 +465,45 @@ elif resegmentHCal and noise:
         createHcalBarrelCells,
         createEcalBarrelCellsNoise,
         createHcalBarrelCellsNoise,
+        ]
+    if simargs.cone:
+        list_of_algorithms += [selectionECalBarrel,
+                               selectionHCalBarrel,]
+    list_of_algorithms += [
         positionsEcalBarrel,
         positionsHcalSegBarrel,
         ]
-elif noise and not resegmentHCal:
-    list_of_algorithms += [ 
+
+elif not resegmentHCal and noise:
+    list_of_algorithms += [
         createEcalBarrelCellsNoise,
         createHcalBarrelCellsNoise,
+        ]
+    if simargs.cone:
+        list_of_algorithms += [selectionECalBarrel,
+                               selectionHCalBarrel,
+                               ]
+    list_of_algorithms += [
         positionsEcalBarrel,
         positionsHcalBarrel,
         ]
 else:
     list_of_algorithms += [rewriteECalEC,
                            rewriteHCalEC,
-                           positionsEcalBarrel,
-                           positionsHcalBarrel,
-                           positionsEcalEndcap,
-                           positionsEcalFwd,
-                           positionsHcalEndcap,
-                           positionsHcalFwd,
                            ]
+    if simargs.cone:
+        list_of_algorithms += [selectionECalBarrel,
+                               selectionHCalBarrel,
+                               ]
+    list_of_algorithms += [
+        positionsEcalBarrel,
+        positionsHcalBarrel,
+        positionsEcalEndcap,
+        positionsEcalFwd,
+        positionsHcalEndcap,
+        positionsHcalFwd,
+        ]
+
 if addMuons:
     list_of_algorithms += [positionsTailCatcher]
 

@@ -15,6 +15,7 @@ simparser.add_argument("--pileup", type=int, help="Added pileup events to signal
 simparser.add_argument('--prefixCollections', type=str, help='Prefix added to the collection names', default="")
 simparser.add_argument("--resegmentHCal", action='store_true', help="Merge HCal cells in DeltaEta=0.025 bins", default = False)
 simparser.add_argument("--bFieldOff", action='store_true', help="Switch OFF magnetic field (default: B field ON)")
+simparser.add_argument('--cone', type=float, help='Pre-selection of to be clustered cells.')
 
 simargs, _ = simparser.parse_known_args()
 
@@ -46,6 +47,11 @@ print "detectors are taken from: ", path_to_detector
 print "calibrate clusters: ", calib
 print "resegment HCal: ", resegmentHCal
 print "no B field: ", bFieldOff
+
+cone = -1.
+if simargs.cone:
+    cone = simargs.cone
+    print "Cells pre selected within cone of R < ", cone
 
 # correct EM calibration of hcal cells                                                                                                                                                    
 hadronSampl_hcal = 0.024
@@ -146,7 +152,7 @@ hcalFieldValues=[8]
 inputCellCollectionECalBarrel = prefix+"ECalBarrelCells"
 inputCellCollectionHCalBarrel = prefix+"HCalBarrelCells"
 inputCollections = [prefix+"ECalBarrelCells", prefix+"HCalBarrelCells", ]
-if calib:
+if calib or simargs.cone:
     inputCollections += ["GenParticles", "GenVertices"] 
 inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_constNoiseLevel.root"
 inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/cellNoise_map_segHcal_noiseLevelElectronicsPileup_mu"+str(puEvents)+".root"
@@ -273,7 +279,9 @@ barrelHcalGeometry = LayerPhiEtaCaloTool("BarrelHcalGeo",
 
 ############## DEFINE OPTIONS FOR RESEGMENTED HCAL 
 inputTopoCellCollectionHCalBarrel = inputCellCollectionHCalBarrel
+cellPosToolHCal = HCalBcellVols
 if resegmentHCal:
+    cellPosToolHCal = HCalBsegcells
     inputNeighboursMap = "/afs/cern.ch/work/c/cneubuse/public/FCChh/neighbours_map_barrel.root"
     inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_electronicsNoiseLevel.root"
     inputPileupNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/inBfield/resegmentedHCal/cellNoise_map_electronicsNoiseLevel_forPU"+str(puEvents)+"_recTopo.root"
@@ -346,13 +354,17 @@ if elNoise and not puNoise:
     
     # re-calibrate HCal Barrel cells to correct EM scale 
     calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction= str(hadronSampl_hcal/emSampl_hcal))
+    if not calib:
+        EMscale = True
+    else:
+        EMscale = False
     # HCal Barrel noise
     noiseHcal = NoiseCaloCellsFlatTool("HCalNoise", cellNoise = 0.01)
     
     if resegmentHCal:
         createHcalBarrelCellsNoise = CreateCaloCells("CreateHCalBarrelCellsNoise",
                                                      geometryTool = barrelHcalGeometry,
-                                                     doCellCalibration = True, recalibrateBaseline =False,
+                                                     doCellCalibration = EMscale, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
                                                      calibTool = calibHcells,
                                                      noiseTool = noiseHcal)
@@ -361,12 +373,36 @@ if elNoise and not puNoise:
     else:
         createHcalBarrelCellsNoise = CreateCaloCells("CreateHCalBarrelCellsNoise",
                                                      geometryTool = hcalgeo,
-                                                     doCellCalibration = True, recalibrateBaseline =False,
+                                                     doCellCalibration = EMscale, recalibrateBaseline =False,
                                                      addCellNoise = True, filterCellNoise = False,
                                                      calibTool = calibHcells,
                                                      noiseTool = noiseHcal)
         createHcalBarrelCellsNoise.hits.Path = inputTopoCellCollectionHCalBarrel
         createHcalBarrelCellsNoise.cells.Path = "HCalBarrelCellsNoise"
+
+    # Select cells before running clustering
+    from Configurables import ConeSelection
+    selectionECal = ConeSelection("selectionECal",
+                                  cells = "ECalBarrelCellsNoise",
+                                  particles = "GenParticles",
+                                  selCells = "selectedECalBarrelCellsNoise",
+                                  positionsTool = ECalBcells,
+                                  radius = cone,
+                                  OutputLevel = INFO)
+    selectionHCal = ConeSelection("selectionHCal",
+                                  cells = "HCalBarrelCellsNoise",
+                                  particles = "GenParticles",
+                                  selCells = "selectedHCalBarrelCellsNoise",
+                                  positionsTool = cellPosToolHCal,
+                                  radius = cone,
+                                  OutputLevel = INFO)
+
+    cellInputECal = "ECalBarrelCellsNoise"
+    cellInputHCal = "HCalBarrelCellsNoise"
+    
+    if simargs.cone:
+            cellInputECal = "selectedECalBarrelCellsNoise"
+            cellInputHCal = "selectedHCalBarrelCellsNoise"
 
     # Create topo clusters
     from Configurables import CaloTopoClusterInputTool, CaloTopoCluster
@@ -378,10 +414,10 @@ if elNoise and not puNoise:
                                                     hcalExtBarrelReadoutName = "",
                                                     hcalEndcapReadoutName = "",
                                                     hcalFwdReadoutName = "")
-    createTopoInputNoise.ecalBarrelCells.Path = "ECalBarrelCellsNoise"
+    createTopoInputNoise.ecalBarrelCells.Path = cellInputECal
     createTopoInputNoise.ecalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.ecalFwdCells.Path = "emptyCaloCells"
-    createTopoInputNoise.hcalBarrelCells.Path = "HCalBarrelCellsNoise"
+    createTopoInputNoise.hcalBarrelCells.Path = cellInputHCal
     createTopoInputNoise.hcalExtBarrelCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalEndcapCells.Path = "emptyCaloCells"
     createTopoInputNoise.hcalFwdCells.Path = "emptyCaloCells"
@@ -445,18 +481,28 @@ if elNoise and not puNoise:
                                                     positionsHCalTool = HCalBsegcells,
                                                     positionsHCalNoSegTool = HCalBcellVols,
                                                     noSegmentationHCal = noSegmentationHCal,
-                                                    calibrate = True, # will not re-calibrate the ECal, but HCal cells are scaled to EM
-                                                    cryoCorrection = True,
-                                                    eDepCryoCorrection = False,
+                                                    calibrate = True,
+                                                    eDepCryoCorrection = True,
                                                     ehECal = 1.,
                                                     ehHCal = 1.,
-                                                    a = benchmark_a,
-                                                    b = benchmark_b,
-                                                    c = benchmark_c,
-                                                    d = benchmark_d,
-                                                    e = benchmark_e,
-                                                    f = benchmark_f,
+                                                    a1 = a1,
+                                                    a2 = a2,
+                                                    a3 = a3,
+                                                    b1 = b1,
+                                                    b2 = b2,
+                                                    b3 = b3,
+                                                    c1 = c1,
+                                                    c2 = c2,
+                                                    c3 = c3,
                                                     fractionECal = fractionECal)
+# to be tested:
+#                                                    a = benchmark_a,
+#                                                    b = benchmark_b,
+#                                                    c = benchmark_c,
+#                                                    d = benchmark_d,
+#                                                    e = benchmark_e,
+#                                                    f = benchmark_f,
+#                                                    fractionECal = fractionECal)
 
         THistSvc().Output = ["rec DATAFILE='calibrateCluster_histograms.root' TYP='ROOT' OPT='RECREATE'"]
         THistSvc().PrintAll=True
@@ -712,10 +758,12 @@ out.outputCommands = ["drop *", "keep GenParticles", "keep GenVertices", "keep c
 out.filename = output_name
 
 if elNoise or puNoise:
+    if simargs.cone:
+        out.outputCommands += ["keep selectedECalBarrelCellsNoise", "keep selectedHCalBarrelCellsNoise"]
     if calib:
-        out.outputCommands += ["keep ECalBarrelCellsNoise", "keep HCalBarrelCellsNoise", "keep calibCaloClusterBarrelCellsNoise", "keep calibCaloClustersBarrelNoise", "keep caloClusterBarrelNoiseCellPositions"]
+        out.outputCommands += ["keep calibCaloClustersBarrelNoise", "keep caloClusterBarrelNoiseCells", "keep calibCaloClusterBarrelCellsNoise", "keep caloClusterBarrelNoiseCellPositions"]
     else:
-        out.outputCommands += ["keep ECalBarrelCellsNoise", "keep HCalBarrelCellsNoise", "keep caloClustersBarrelNoise", "keep caloClusterBarrelNoiseCells", "keep caloClusterBarrelNoiseCellPositions"]
+        out.outputCommands += ["keep caloClustersBarrelNoise", "keep caloClusterBarrelNoiseCells", "keep caloClusterBarrelNoiseCellPositions"]
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -733,7 +781,10 @@ if resegmentHCal and addedPU==0:
     list_of_algorithms += [posHcalBarrel, resegmentHcalBarrel, createHcalBarrelCells]
 
 if elNoise or puNoise:
-    list_of_algorithms += [createEcalBarrelCellsNoise, createHcalBarrelCellsNoise, createTopoClustersNoise]
+    list_of_algorithms += [createEcalBarrelCellsNoise, createHcalBarrelCellsNoise]
+    if simargs.cone:
+        list_of_algorithms += [selectionECal, selectionHCal]
+    list_of_algorithms += [createTopoClustersNoise]
     if not puNoise:
         list_of_algorithms += [positionsClusterBarrelNoise]
     if calib:
