@@ -59,6 +59,9 @@ if outfile_name.find("bFieldOn"):
     b=0.565
     c1=-0.00000074
 
+rminECal = 175
+bField = 4
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--resegmentedHCal', action='store_true', help="HCal cells are resegmented to deltaEta = 0.025, use different decoder")
 parser.add_argument('--noSignal', action='store_true', help='cone around opposite gen particle eta positions, to extract noise/cell')
@@ -169,6 +172,14 @@ with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_
                     gen_z.push_back(g.startVertex().z()/10.)
                     
                     pt=math.sqrt(g.p4().px**2+g.p4().py**2)
+                    radius=pt/0.3/bField
+                    
+                    if g.charge()!=0:
+                        print "_____________________"
+                        print "Particle pt :    ", pt
+                        print "Particle charge: ", g.charge()
+                        print "Helix radius:    ", radius
+                    
                     eta=position.Eta()
                     phi=position.Phi()
                     
@@ -454,6 +465,7 @@ with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_
         gen_pdgid.clear()
         gen_status.clear()
         
+        cluster_cells.clear()
         cluster_eta.clear()
         cluster_phi.clear()
         cluster_pt.clear()
