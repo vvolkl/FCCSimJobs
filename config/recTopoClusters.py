@@ -11,6 +11,7 @@ simparser.add_argument('--sigma2', type=float, default=2., help='Energy threshol
 simparser.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
 simparser.add_argument('--detectorPath', type=str, help='Path to detectors', default = "/cvmfs/fcc.cern.ch/sw/releases/0.9.1/x86_64-slc6-gcc62-opt/linux-scientificcernslc6-x86_64/gcc-6.2.0/fccsw-0.9.1-c5dqdyv4gt5smfxxwoluqj2pjrdqvjuj")
 simparser.add_argument("--calibrate", action='store_true', help="Calibrate clusters (default: false)")
+simparser.add_argument("--benchmark", action='store_true', help="Calibrate clusters, using cell-level benchmark parameters (default: false)")
 simparser.add_argument("--pileup", type=int, help="Added pileup events to signal", default=0)
 simparser.add_argument('--prefixCollections', type=str, help='Prefix added to the collection names', default="")
 simparser.add_argument("--resegmentHCal", action='store_true', help="Merge HCal cells in DeltaEta=0.025 bins", default = False)
@@ -64,6 +65,7 @@ benchmark_c = -7.4E-6
 benchmark_d = 0. #-.92
 benchmark_e = 1. #0.9697
 benchmark_f = 1. #1./0.9956
+
 if bFieldOff:
     emSampl_hcal = 0.0249
     benchmark_a = 1.062
@@ -72,7 +74,11 @@ if bFieldOff:
     benchmark_d = 0. #-.83
     benchmark_e = 1. #0.9834
     benchmark_f = 1. #1./0.9973
+
 # from minimisation (bFieldOn, C=0): 0.975799,-2.54738e-06,0.822663,-0.140975,-2.18657e-05,-0.0193682
+edepCalib = True
+benchCalib = False
+
 a1 = 0.975799
 a2 = -2.54738e-06
 a3 = 0.822663
@@ -82,6 +88,21 @@ b3 = -0.0193682
 c1 = 0
 c2 = 0
 c3 = 1
+if simargs.benchmark:
+    calib = True
+    edepCalib = False
+    benchCalib = True
+    a1 = benchmark_a
+    a2 = 0.
+    a3 = 0.
+    b1 = benchmark_b
+    b2 = 0.
+    b3 = 0.
+    c1 = benchmark_c
+    c2 = 0.
+    c3 = 0.
+    
+
 # no distrinction of shared clusters needed
 fractionECal = 1
 
@@ -482,7 +503,8 @@ if elNoise and not puNoise:
                                                     positionsHCalNoSegTool = HCalBcellVols,
                                                     noSegmentationHCal = noSegmentationHCal,
                                                     calibrate = True,
-                                                    eDepCryoCorrection = True,
+                                                    cryoCorrection = benchCalib,
+                                                    eDepCryoCorrection = edepCalib,
                                                     ehECal = 1.,
                                                     ehHCal = 1.,
                                                     a1 = a1,
@@ -495,14 +517,6 @@ if elNoise and not puNoise:
                                                     c2 = c2,
                                                     c3 = c3,
                                                     fractionECal = fractionECal)
-# to be tested:
-#                                                    a = benchmark_a,
-#                                                    b = benchmark_b,
-#                                                    c = benchmark_c,
-#                                                    d = benchmark_d,
-#                                                    e = benchmark_e,
-#                                                    f = benchmark_f,
-#                                                    fractionECal = fractionECal)
 
         THistSvc().Output = ["rec DATAFILE='calibrateCluster_histograms.root' TYP='ROOT' OPT='RECREATE'"]
         THistSvc().PrintAll=True

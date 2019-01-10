@@ -144,6 +144,9 @@ def getJobInfo(argv):
         if '--calibrate' in argv:
             job_type += "/calibrated/11_2018/"
             short_job_type += "_calib"
+        elif '--benchmark' in argv:
+            job_type += "/calibrated/benchmark/"
+            short_job_type += "_calibBench"
         if '--addConeCut' in argv:
             job_type += "coneCut/"
             short_job_type += "_coneCut"
@@ -258,6 +261,7 @@ if __name__=="__main__":
     recoTopoClusterGroup.add_argument('--sigma2', type=float, default=2, help='Energy threshold [in number of sigmas] for neighbours')
     recoTopoClusterGroup.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
     recoTopoClusterGroup.add_argument('--calibrate', action='store_true', help="Calibrate Topo-cluster")
+    recoTopoClusterGroup.add_argument('--benchmark', action='store_true', help="Use cell-wise determined benchmark parameters for calibration of topo-cluster")
 
     args, _ = parser.parse_known_args()
 
@@ -312,7 +316,7 @@ if __name__=="__main__":
             job_type += "/rebase/"
         if args.resegmentHCal:
             short_job_type += "_resegmHCal"
-            job_type += "resegmentedHCal/"
+            job_type += "/resegmentedHCal/"
         num_events = args.numEvents
     elif args.estimatePileup and args.pileup:
         short_job_type += "_PU"+str(args.pileup)
@@ -422,11 +426,11 @@ if __name__=="__main__":
         # if signal events are used (simu/) or mixed pileup events (simuPU.../)
         if not args.mergePileup and not args.addPileupNoise and not args.addPileupToSignal and args.pileup and not (args.pileup == 0):
             inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
-            if args.rebase and not args.resegmentHCal:
+            if args.rebase and not args.resegmentHCal and not args.estimatePileup:
                 inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/')
-            elif args.resegmentHCal and not args.rebase:
+            elif args.resegmentHCal and not args.rebase and not args.estimatePileup:
                 inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/resegmentedHCal/')
-            elif args.rebase and args.resegmentHCal:
+            elif args.rebase and args.resegmentHCal and not args.estimatePileup:
                 inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/resegmentedHCal/')
         else:
             inputID = os.path.join(yamldir, version, job_dir, 'simu')
@@ -551,6 +555,8 @@ if __name__=="__main__":
             common_fccsw_command += ' --addPileupNoise --pileup ' + str(args.pileup)
         if args.calibrate:
             common_fccsw_command += ' --calibrate'
+        elif args.benchmark:
+            common_fccsw_command += ' --benchmark'
         if args.rebase:
             common_fccsw_command += ' --rebase'
         if args.physics:
@@ -649,7 +655,7 @@ if __name__=="__main__":
                 os.system("mkdir -p %s"%(ntup_path))
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters_%s.root %s/%s\n'%(seed,ntup_path,outfile))
             frun.write('rm $JOBDIR/clusters_%s.root \n'%(seed))
-            if args.calibrate:
+            if args.calibrate or args.benchmark:
                 ana_path = ntup_path.replace('/ntup', '/ana/')
                 if not ut.dir_exist(ana_path):
                     os.system("mkdir -p %s"%(ana_path))

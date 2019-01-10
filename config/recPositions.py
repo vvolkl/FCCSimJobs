@@ -338,7 +338,6 @@ if noise:
 ##############################################################################################################
 if simargs.cone:
     print 'Cell collections for cone selection: ', ecalBarrelCellsForSelection, hcalBarrelCellsForSelection
-    print 'HCal Cell posiitons tool for cone selection: ', hcalCellPositionsTool
     # Select cells before running clustering
     from Configurables import ConeSelection
     selectionECalBarrel = ConeSelection("selectionECalBarrel",

@@ -108,7 +108,7 @@ ecalBarrelGeometry = TubeLayerPhiEtaCaloTool("EcalBarrelGeo",
                                              fieldNames = ["system"],
                                              fieldValues = [5],
                                              activeVolumesNumber = 8)
-# Geometry for layer-eta-phi segmentation                                                                                                                                                                
+# Geometry for layer-eta-phi segmentation                                                                                           
 hcalBarrelGeometry = LayerPhiEtaCaloTool("hcalBarrelGeometry",
                                          readoutName = "BarHCal_Readout_phieta",
                                          activeVolumeName = "layerVolume",
@@ -119,7 +119,7 @@ hcalBarrelGeometry = LayerPhiEtaCaloTool("hcalBarrelGeometry",
                                          activeVolumesEta = [1.2524, 1.2234, 1.1956, 1.15609, 1.1189, 1.08397, 1.0509, 0.9999, 0.9534, 0.91072]
                                          )
 
-# No segmentation, geometry with nested volumes                                                                                                                                                          
+# No segmentation, geometry with nested volumes                                                                                                        
 hcalgeo = NestedVolumesCaloTool("hcalgeo",
                                 activeVolumeName = hcalVolumeName,
                                 activeFieldName = hcalIdentifierName,
@@ -151,6 +151,14 @@ towers.hcalExtBarrelCells.Path = "emptyCaloCells"
 towers.hcalEndcapCells.Path = "emptyCaloCells"
 towers.hcalFwdCells.Path = "emptyCaloCells"
 
+inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_segHcal_electronicsNoiseLevel.root"
+if resegmentHCal:
+    inputNoisePerCell = "/afs/cern.ch/work/c/cneubuse/public/FCChh/cellNoise_map_electronicsNoiseLevel.root"
+
+# use topo-cluster map of electronics noise level per Barrel cell
+from Configurables import TopoCaloNoisyCells
+readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
+                                       fileName = inputNoisePerCell)
 # call pileup tool
 # prepare TH2 histogram with pileup per abs(eta)
 from Configurables import PreparePileup
@@ -160,6 +168,7 @@ pileupEcalBarrel = PreparePileup("PreparePileupEcalBarrel",
                                  layerFieldName = "layer",
                                  towerTool = towers,
                                  positionsTool = ECalBcells,
+                                 noiseTool = readNoisyCellsMap,
                                  histogramName = "ecalBarrelEnergyVsAbsEta",
                                  numLayers = 8,
                                  etaSize = [7,  5,  7,   9,   3,   3,  99],
@@ -173,13 +182,14 @@ if resegmentHCal:
     hcalGeoService = hcalBarrelGeometry
     hcalCellPositions = HCalBsegcells
     hcalReadoutName = hcalBarrelReadoutNamePhiEta
-
+    
 pileupHcalBarrel = PreparePileup("PreparePileupHcalBarrel",
                                  geometryTool = hcalGeoService,
                                  readoutName = hcalReadoutName,
                                  positionsTool = hcalCellPositions,
                                  layerFieldName = "layer",
                                  towerTool = towers,
+                                 noiseTool = readNoisyCellsMap,
                                  histogramName = "hcalBarrelEnergyVsAbsEta",
                                  numLayers = 10,
                                  etaSize = [7,  5,  7,   9,   3,   3,  99],
