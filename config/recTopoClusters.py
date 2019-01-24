@@ -813,7 +813,6 @@ list_of_algorithms += [out]
 ApplicationMgr(
     TopAlg = list_of_algorithms,
     EvtSel = 'NONE',
-    # test if set first ev 
     EvtMax = num_events,
     ExtSvc = [geoservice, podioevent],
     #    OutputLevel = DEBUG
