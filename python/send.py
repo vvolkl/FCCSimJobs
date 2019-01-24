@@ -87,9 +87,6 @@ def getJobInfo(argv):
         if '--addConeCut' in argv:
             job_type += "coneCut/"
             short_job_type += "_coneCut"
-        elif '--addWindowCut' in argv:
-            job_type += "windowCut/"
-            short_job_type += "_windowCut"        
         if '--noSignal' in argv:
             job_type += "/noSignal/"
         return default_options,job_type,short_job_type,False
@@ -219,8 +216,6 @@ if __name__=="__main__":
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
     parser.add_argument("--addConeCut", action='store_true', help="Add a cone-based cut for selection of cells/clusters.")
     parser.add_argument("--cone", type=float, required = '--addConeCut' in sys.argv, help="Cone size within cells/clusters are included in output.")     
-    parser.add_argument("--addWindowCut", action='store_true', help="Add a window-based cut for selection of cells/clusters.")
-    parser.add_argument("--window", type=float, required = '--addWindowCut' in sys.argv, help="Window size within cells/clusters are included in output.")
     parser.add_argument("--noSignal", action='store_true', help="In cone selection, select non-signal region (opposite eta of gen particle).")
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
@@ -327,10 +322,7 @@ if __name__=="__main__":
     if args.addConeCut: #add cut on output selection around cone of genparticles 
         job_type = job_type.replace("coneCut", "coneCut/"+str(args.cone))
         short_job_type += "cone"+str(args.cone)
-    elif args.addWindowCut: #add cut on output selection around cone of genparticles
-        job_type = job_type.replace("windowCut", "windowCut/"+str(args.window))
-        short_job_type += "window"+str(args.window)
-
+    
     if (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup and not args.addPileupNoise: # if reconstruction is run on pileup (mixed) events
         job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
         short_job_type += "PU"+str(args.pileup)
@@ -640,8 +632,6 @@ if __name__=="__main__":
             common_recPos_command = 'python %s/python/Convert.py %s $JOBDIR/cells_%s.root '%(current_dir,outfile,seed)
             if args.resegmentHCal:
                 common_recPos_command += ' --resegmentedHCal '
-            elif args.addWindowCut:
-                common_recPos_command += ' --window %f'%(args.window)
             frun.write(common_recPos_command)
             frun.write('\n python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/cells_%s.root %s/%s\n'%(seed,outdir,outfile))
             frun.write('rm $JOBDIR/cells_%s.root \n'%(seed))

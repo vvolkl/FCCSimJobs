@@ -172,13 +172,6 @@ with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_
                     gen_z.push_back(g.startVertex().z()/10.)
                     
                     pt=math.sqrt(g.p4().px**2+g.p4().py**2)
-                    radius=pt/0.3/bField
-                    
-                    if g.charge()!=0:
-                        print "_____________________"
-                        print "Particle pt :    ", pt
-                        print "Particle charge: ", g.charge()
-                        print "Helix radius:    ", radius
                     
                     eta=position.Eta()
                     phi=position.Phi()
@@ -204,6 +197,7 @@ with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_
                         etaGen = float(etaGen)/float(energyGen)
                         phiGen = float(phiGen)/float(energyGen)
                         
+                    # used to collect cells without signal -> noise/cone estimations
                     if args.noSignal:
                         etaGen = -etaGen
                         phiGen = -phiGen
@@ -487,6 +481,7 @@ with EventStore([infile_name]) as evs: # p.ex output of Examples/options/simple_
         
         numEvent += 1
 
+outtree.Write()
 outfile.Write()
 outfile.Close()
 
