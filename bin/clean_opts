@@ -1,0 +1,25 @@
+#!/usr/bin/env python2
+import sys
+
+buf = []
+
+with open(sys.argv[1], "r") as f:
+  for line in f:
+    veto = False
+    if "DataObjectHandleBase(" in line:
+      line = line.replace("DataObjectHandleBase(", '')
+      line = line.replace(')','')
+    
+    if ".ErrorCount" in line:
+      veto = True
+    if "ApplicationMgr.Audit" in line:
+      veto = True
+    if "ApplicationMgr.Exit" in line:
+      veto = True
+    if "ApplicationMgr.Go" in line:
+      veto = True
+
+    if not veto:
+      buf.append(line)
+
+print "".join(buf)
