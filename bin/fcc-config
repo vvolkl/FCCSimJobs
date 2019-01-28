@@ -1,0 +1,74 @@
+#!/usr/bin/env python2
+"""
+Print help messages for gaudi components
+"""
+from Gaudi import Configuration
+import Configurables
+import os
+import sys
+
+# TODO: rewritte  print function for tools
+
+
+GaudiProps = [ "ContextService", "Cardinality", "Context", "CounterList", "EfficiencyRowFormat", "Enable", "ErrorCount", "ErrorMax", "ErrorsPrint", "ExtraInputs", "ExtraOutputs", "FilterCircularDependencies", "StatEntityList", "IsIOBound", "MonitorService", "NeededResources", "PropertiesPrint", "RegisterForContextService", "RegularRowFormat", "RequireObjects", "RootInTES", "StatPrint", "StatTableHeader", "Timeline", "TypePrint", "UseEfficiencyRowFormat", "VetoObjects" ]
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+    parser = OptionParser(prog=os.path.basename(
+        sys.argv[0]), usage="%prog [options] ")
+    parser.add_option("-l", "--list", action="store_true", dest="list",
+                      default=False, help="list available fcc components.")
+    parser.add_option("-g", "--gaudi", action="store_true", dest="list_gaudi",
+                      default=False, help="also list available gaudi components.")
+    parser.add_option("-n", "--name", action="store", dest="name",
+                      help="dump all info about component of given name.")
+    parser.set_defaults(root=os.path.join("..", "python"))
+    opts, args = parser.parse_args()
+
+    if len(args) != 0:
+        parser.print_help()
+        sys.exit(1)
+
+    cfgDb = Configuration.cfgDb
+    #print cfgDb
+    if opts.list:
+        print "Available components:\n%s" % (21 * "=")
+        for item in sorted(cfgDb):
+            if opts.list_gaudi:
+              print "  %s (from %s)" % (item, cfgDb[item]["lib"])
+            else:
+                if not "Gaudi" in cfgDb[item]["lib"]:
+                  print "  %s (from %s)" % (item, cfgDb[item]["lib"])
+        sys.exit()
+    elif opts.name:
+        name = opts.name
+        if name not in cfgDb:
+            print "Component %s not found." % (name)
+            sys.exit()
+        print "\nDumping component information for %s:\n%s" % (name, (35 + len(name)) * "=")
+        print "  Library: %s" % (cfgDb[name]["lib"])
+        print "  Package: %s" % (cfgDb[name]["package"])
+        print "\nProperties:\n%s" % (11 * "-")
+        try:
+            properties = getattr(Configurables, name)(
+            ).getPropertiesWithDescription()
+        except AttributeError:
+            print "  Not a configurable component. No properties to show."
+            sys.exit()
+        for label, (value, desc) in sorted(properties.iteritems()):
+            if opts.list_gaudi:
+              print ("  %s\t : %s\t (%s) " % (label, value, str(
+                  desc).replace("None", " no description "))).expandtabs(30)
+            else:
+              if not "Audit" in label:
+                if label not in GaudiProps:
+                    if not hasattr(value, '__slots__'):
+                      print ("  %s\t : %s\t (%s) " % (label, value, str(
+                          desc).replace("None", " no description "))).expandtabs(30)
+                    else:
+                      if hasattr(value, 'name'):
+                        print ""
+                        print ("  %s\t : %s\t (%s) " % (label, value, str(
+                            desc).replace("None", " no description "))).expandtabs(30)
+        sys.exit()
