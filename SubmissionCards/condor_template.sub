@@ -1,0 +1,15 @@
+{#- Set defaults for template variables #}
+{#- '<1> or <2>' is a shorthand for 'if <1> is false then <2>' #}
+{%- set user=user or env['user'] %}
+{%- set jobdir=jobdir or env["PWD"]  %}
+{%- set seed=seed or 0  %}
+
+executable            = {{jobdir}}/{{jobscript or "test.sh"}}
+arguments             = $(ClusterID) $(ProcId)
+output                = {{jobdir}}/out/job.{{user}}_{{seed}}.$(ClusterId).$(ProcId).out
+log                   = {{jobdir}}/log/job.{{user}}_{{seed}}.$(ClusterId).$(ProcId).log
+error                 = {{jobdir}}/err/job.{{user}}_{{seed}}.$(ClusterId).$(ProcId).err
+RequestCpus = {{RequestCpus or 8}}
++JobFlavour = {{JobFlavour or "nextweek"}}
+queue {{queue or 1}}
+
