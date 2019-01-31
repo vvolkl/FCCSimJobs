@@ -27,8 +27,6 @@ queue {{queue or 1}}
 """
 
 templates['run.sh'] = """
-
-
 #!/bin/bash
 
 {#- Set defaults for template variables #}
@@ -82,15 +80,15 @@ ApplicationMgr().EvtMax = 12
 
 runid = uuid.uuid4().hex[:7]
 runname = "RUN"+runid
-submitdir = ""
+submitdir = "./SubmitArea"
 
 
 conf = {
     'env': os.environ,
   }
 
-
-os.makedirs(submitdir)
+if not os.path.isdir(submitdir):
+  os.makedirs(submitdir)
 
 
 
@@ -100,7 +98,7 @@ condor_dagfile = open(condor_dagfilename, 'w')
 
 for numjobs in range(3):
   jobid = uuid.uuid4().hex[:7] 
-  jobname = "JOB" + jobid
+  jobname = runname + "JOB" + jobid
   conf["jobid"] = jobid
   print "creating files for job " + jobname
   for templatename in templates:
