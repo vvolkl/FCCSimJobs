@@ -85,9 +85,9 @@ if __name__ == "__main__":
     parser.set_defaults(root=os.path.join("..", "python"))
     opts, args = parser.parse_args()
 
-    if len(args) != 0:
-        parser.print_help()
-        sys.exit(1)
+    #if len(args) != 0:
+    #    parser.print_help()
+    #    sys.exit(1)
 
     cfgDb = Configuration.cfgDb
     #print cfgDb

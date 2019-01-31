@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import jinja2
 import os
 import argparse
@@ -17,7 +18,6 @@ for arg in unknown:
         parser.add_argument(arg, type=str)
 
 args=parser.parse_args()
-print args
 
 
 
@@ -25,6 +25,7 @@ with open(args.filename) as f:
   templatestr = f.read()
 
 t = jinja2.Template(templatestr)
-rendered_template = t.render(env=os.environ, **vars(args))
+#rendered_template = t.render(env=os.environ, **vars(args))
+rendered_template = t.render()
 print rendered_template
 
