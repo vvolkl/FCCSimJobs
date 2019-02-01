@@ -10,11 +10,11 @@ import uuid
 
 templates = {}
 templates['condor.sub'] = """
-executable            = {{jobname}}_run.sh {{env["PWD"]}}/{{submitdir}}/{{jobname}}_config.py
-arguments             = $(ClusterID) $(ProcId)
-output                = job.crmc.$(ClusterId).$(ProcId).out
-log                   = job.crmc.$(ClusterId).$(ProcId).log
-error                 = job.crmc.$(ClusterId).$(ProcId).err
+executable            = {{submitdir}}/{{jobname}}_run.sh
+arguments             = {{submitdir}}/{{jobname}}_config.py
+output                = {{jobname}}.$(ClusterId).$(ProcId).out
+log                   = {{jobname}}.$(ClusterId).$(ProcId).log
+error                 = {{jobname}}.$(ClusterId).$(ProcId).err
 RequestCpus = 8
 +JobFlavour = nextweek
 queue 1
@@ -22,8 +22,7 @@ queue 1
 
 """
 
-templates['run.sh'] = """
-#!/bin/bash
+templates['run.sh'] = """#!/bin/bash
 
 export jobid={{jobid}}
 export JOBDIR=$PWD
@@ -53,10 +52,11 @@ out.filename = "output.root"
 
 runid = uuid.uuid4().hex[:7]
 runname = "RUN"+runid
-submitdir = "./SubmitArea"
+submitdir = os.environ["PWD"] + "/SubmitArea"
 
 
 conf = {
+    'submitdir': submitdir,
     'env': os.environ,
     'runid': runid,
   }
