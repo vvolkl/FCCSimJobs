@@ -25,7 +25,6 @@ with open(args.filename) as f:
   templatestr = f.read()
 
 t = jinja2.Template(templatestr)
-#rendered_template = t.render(env=os.environ, **vars(args))
-rendered_template = t.render()
+rendered_template = t.render(env=os.environ, **vars(args))
 print rendered_template
 
