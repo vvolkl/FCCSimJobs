@@ -81,11 +81,12 @@ for numjobs in range(100):
     for templatename in templates:
       t = jinja2.Template(templates[templatename])
       rendered_t = t.render(**conf)
+      _filename_short = jobname + "_" + templatename
       _filename = submitdir + "/" + jobname + "_" + templatename
       with open( _filename, 'w') as f:
         f.write(rendered_t)
       if ".sub" in templatename:
-        condor_dagfile.write('JOB job%s %s\n' % (jobid, _filename))
+        condor_dagfile.write('JOB job%s %s\n' % (jobid, _filename_short))
       if ".sh" in templatename:
         os.chmod(_filename, 0755)
 
