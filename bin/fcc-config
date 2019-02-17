@@ -10,7 +10,7 @@ from GaudiKernel import Configurable
 
 # TODO: rewritte  print function for tools
 
-from FCCBase.conf_10_gen import *
+#from FCCBase.conf_10_gen import *
 
 
 GaudiProps = [ "ContextService", "Cardinality", "Context", "CounterList", "EfficiencyRowFormat", "Enable", "ErrorCount", "ErrorMax", "ErrorsPrint", "ExtraInputs", "ExtraOutputs", "FilterCircularDependencies", "StatEntityList", "IsIOBound", "MonitorService", "NeededResources", "PropertiesPrint", "RegisterForContextService", "RegularRowFormat", "RequireObjects", "RootInTES", "StatPrint", "StatTableHeader", "Timeline", "TypePrint", "UseEfficiencyRowFormat", "VetoObjects","OutputLevel" ]

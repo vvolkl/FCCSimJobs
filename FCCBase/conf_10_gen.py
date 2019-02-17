@@ -35,7 +35,6 @@ from Configurables import GenParticleFilter
 # accept is a list of particle statuses that should be accepted
 genfilter = GenParticleFilter("StableParticleFilter")
 genfilter.accept = [1]
-genfilter.OutputLevel = DEBUG 
 genfilter.allGenParticles.Path = "GenParticlesAll"
 genfilter.filteredGenParticles.Path = "GenParticles"
 ApplicationMgr().TopAlg += [genfilter]

@@ -1,5 +1,11 @@
 #!/usr/bin/env gaudirun.py
 
+from Configurables import *
+
+
+import sys
+print sys.argv[1]
+
 # use common config (order is important!)
 from FCCBase.conf_00_main import *
 from FCCBase.conf_10_particlegun import *
@@ -17,6 +23,8 @@ GenAlg().SignalProvider.PdgCodes = [14]
 
 # set number of Events
 ApplicationMgr().EvtMax = 12
+ApplicationMgr().OutputLevel = INFO
+genfilter.OutputLevel =INFO
 
 
 
