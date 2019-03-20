@@ -76,11 +76,19 @@ def takeOnlyNonexistingFiles(files, output):
 def getJobInfo(argv):
     if '--recPositions' in argv:
         default_options = 'config/recPositions.py'
-        job_type = "ntup/positions"
+        job_type = "ntup/positions/"
         short_job_type = "recPos"
         if '--resegmentHCal' in argv:
-            job_type = "ntup/resegmentedHCal/positions"
+            job_type = "ntup/positions/resegmentedHCal/"
             short_job_type += "_resegmHCal"
+        if '--noise' in argv:
+            job_type += "electronicsNoise/"
+            short_job_type += "_addNoise"
+        if '--addConeCut' in argv:
+            job_type += "coneCut/"
+            short_job_type += "_coneCut"
+        if '--noSignal' in argv:
+            job_type += "/noSignal/"
         return default_options,job_type,short_job_type,False
 
     elif '--recSlidingWindow' in argv:
@@ -96,8 +104,11 @@ def getJobInfo(argv):
 
     elif '--estimatePileup' in sys.argv:
         default_options = 'config/preparePileup.py'
-        job_type = "ana/fullBarrel/pileup_cluster"
+        job_type = "ana/fullBarrel/pileup/"
         short_job_type = "pileup"
+        if '--resegmentHCal' in argv:
+            job_type += "resegmentedHCal/"
+            short_job_type += "_resegmHCal"
         return default_options,job_type,short_job_type,False
 
     elif '--mergePileup' in sys.argv:
@@ -128,8 +139,14 @@ def getJobInfo(argv):
             job_type += "resegmentedHCal/"
             short_job_type += "_resegmHCal"
         if '--calibrate' in argv:
-            job_type += "/calibrated/08_2018/"
+            job_type += "/calibrated/11_2018/"
             short_job_type += "_calib"
+        elif '--benchmark' in argv:
+            job_type += "/calibrated/benchmark/"
+            short_job_type += "_calibBench"
+        if '--addConeCut' in argv:
+            job_type += "coneCut/"
+            short_job_type += "_coneCut"
         return default_options,job_type,short_job_type,False
     
     elif '--ntuple' in argv:
@@ -197,7 +214,9 @@ if __name__=="__main__":
     parser.add_argument("--addPileupNoise", action='store_true', help="Add pile-up noise in qudrature to electronics noise")
     parser.add_argument('--pileup', type=int,  required = '--mergePileup' in sys.argv or '--addPileupNoise' in sys.argv or '--addPileupToSignal' in sys.argv, help='Pileup')
     parser.add_argument("--tripletTracker", action="store_true", help="Use triplet tracker layout instead of baseline")
-    
+    parser.add_argument("--addConeCut", action='store_true', help="Add a cone-based cut for selection of cells/clusters.")
+    parser.add_argument("--cone", type=float, required = '--addConeCut' in sys.argv, help="Cone size within cells/clusters are included in output.")     
+    parser.add_argument("--noSignal", action='store_true', help="In cone selection, select non-signal region (opposite eta of gen particle).")
     default_options,job_type,short_job_type,sim = getJobInfo(sys.argv)
     parser.add_argument('--jobOptions', type=str, default = default_options, help='Name of the job options run by FCCSW (default config/geantSim.py')
 
@@ -237,6 +256,7 @@ if __name__=="__main__":
     recoTopoClusterGroup.add_argument('--sigma2', type=float, default=2, help='Energy threshold [in number of sigmas] for neighbours')
     recoTopoClusterGroup.add_argument('--sigma3', type=int, default=0, help='Energy threshold [in number of sigmas] for last neighbours')
     recoTopoClusterGroup.add_argument('--calibrate', action='store_true', help="Calibrate Topo-cluster")
+    recoTopoClusterGroup.add_argument('--benchmark', action='store_true', help="Use cell-wise determined benchmark parameters for calibration of topo-cluster")
 
     args, _ = parser.parse_known_args()
 
@@ -289,12 +309,19 @@ if __name__=="__main__":
         if args.rebase:
             short_job_type += "_rebase"
             job_type += "/rebase/"
+        if args.resegmentHCal:
+            short_job_type += "_resegmHCal"
+            job_type += "/resegmentedHCal/"
         num_events = args.numEvents
     elif args.estimatePileup and args.pileup:
         short_job_type += "_PU"+str(args.pileup)
         job_type += "/PU"+str(args.pileup)+"/"
     elif args.pileup:
         warning("'--pileup "+str(args.pileup)+"' is specified but no usecase was found. Please remove it or update job sending script.")
+    
+    if args.addConeCut: #add cut on output selection around cone of genparticles 
+        job_type = job_type.replace("coneCut", "coneCut/"+str(args.cone))
+        short_job_type += "cone"+str(args.cone)
     
     if (args.recPositions or args.recTopoClusters or args.recSlidingWindow) and args.pileup and not args.addPileupNoise: # if reconstruction is run on pileup (mixed) events
         job_type = job_type.replace("ntup", "ntupPU"+str(args.pileup)).replace("reco", "recoPU"+str(args.pileup))
@@ -379,11 +406,11 @@ if __name__=="__main__":
         warning("Please note that '--preparePileup' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
     if args.recPositions and not args.local == "inits/reco.py":
         warning("Please note that '--recPositions' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
-    if args.recTopoClusters and not args.local == "inits/reco.py":
-        warning("Please note that '--recTopoClusters' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py')", True)
+    if args.recTopoClusters and not (args.local == "inits/reco.py" or args.local == "inits/calibrateCluster.py"):
+        warning("Please note that '--recTopoClusters' is not supported for FCCSW v0.9.1. Make sure that you use suitable software version (recommended: '--local inits/reco.py', '--local inits/calibrateCluster.py')", True)
     if args.recTopoClusters and args.numEvents != -1:
         warning("Please note that '--recTopoClusters' is not run on all events available in simu (recommended: '--n -1')", True)
-
+  
     # first make sure the output path for root files exists
     outdir = os.path.join( output_path, version, job_dir, job_type)
     print "Output will be stored in ... ", outdir
@@ -391,8 +418,12 @@ if __name__=="__main__":
         # if signal events are used (simu/) or mixed pileup events (simuPU.../)
         if not args.mergePileup and not args.addPileupNoise and not args.addPileupToSignal and args.pileup and not (args.pileup == 0):
             inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup))
-            if args.rebase:
+            if args.rebase and not args.resegmentHCal and not args.estimatePileup:
                 inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/')
+            elif args.resegmentHCal and not args.rebase and not args.estimatePileup:
+                inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/resegmentedHCal/')
+            elif args.rebase and args.resegmentHCal and not args.estimatePileup:
+                inputID = os.path.join(yamldir, version, job_dir, 'simuPU'+str(args.pileup)+'/rebase/resegmentedHCal/')
         else:
             inputID = os.path.join(yamldir, version, job_dir, 'simu')
         outputID = os.path.join(yamldir, version, job_dir, job_type)
@@ -411,7 +442,10 @@ if __name__=="__main__":
     # merging pileup events will be done randomly from a given event pool
     if args.mergePileup or args.addPileupToSignal:
         all_inputs = ""
-        if args.addPileupToSignal: 
+        if args.addPileupToSignal:
+            path_to_input_withPU = 'physics/MinBias/'+b_field_str+'/etaFull/simuPU'+str(args.pileup)+'/'
+            if args.resegmentHCal:
+                path_to_input_withPU += 'resegmentedHCal/'
             inputPileupID = os.path.join(yamldir, version, 'physics/MinBias/'+b_field_str+'/etaFull/simuPU'+str(args.pileup)+'/')
             pileup_input_files = getInputFiles(inputPileupID)
         else: 
@@ -513,6 +547,8 @@ if __name__=="__main__":
             common_fccsw_command += ' --addPileupNoise --pileup ' + str(args.pileup)
         if args.calibrate:
             common_fccsw_command += ' --calibrate'
+        elif args.benchmark:
+            common_fccsw_command += ' --benchmark'
         if args.rebase:
             common_fccsw_command += ' --rebase'
         if args.physics:
@@ -528,12 +564,16 @@ if __name__=="__main__":
         if args.recPositions:
             if args.pileup:
                 common_fccsw_command += ' --prefixCollections merged '
+            if args.addConeCut:
+                common_fccsw_command += ' --cone %f'%(args.cone)
         if args.recSlidingWindow:
             common_fccsw_command += ' --winEta ' + str(args.winEta) + ' --winPhi ' + str(args.winPhi) + ' --enThreshold ' + str(args.enThreshold) + ' '
         if args.recTopoClusters:
             common_fccsw_command += ' --sigma1 ' + str(args.sigma1) + ' --sigma2 ' + str(args.sigma2) + ' --sigma3 ' + str(args.sigma3) + ' '
             if args.pileup and not args.addPileupNoise:
                 common_fccsw_command +=  '--pileup ' + str(args.pileup)
+            if args.addConeCut:
+                common_fccsw_command += ' --cone %f'%(args.cone)
         if args.pileup and not args.addPileupNoise and not args.mergePileup:
             common_fccsw_command += ' --prefixCollections merged '
                     
@@ -589,11 +629,12 @@ if __name__=="__main__":
             else:
                 frun.write('%s --inName %s\n'%(common_fccsw_command, input_files[i]))
         if args.recPositions:
+            common_recPos_command = 'python %s/python/Convert.py %s $JOBDIR/cells_%s.root '%(current_dir,outfile,seed)
             if args.resegmentHCal:
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s --resegmentedHCal \n'%(current_dir,outfile))
-            else:
-                frun.write('python %s/python/Convert.py edm.root $JOBDIR/%s\n'%(current_dir,outfile))
-            frun.write('rm edm.root \n')
+                common_recPos_command += ' --resegmentedHCal '
+            frun.write(common_recPos_command)
+            frun.write('\n python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/cells_%s.root %s/%s\n'%(seed,outdir,outfile))
+            frun.write('rm $JOBDIR/cells_%s.root \n'%(seed))
         elif args.recTopoClusters or args.recSlidingWindow:
             if args.resegmentHCal:
                 frun.write('python %s/python/Convert.py $JOBDIR/%s $JOBDIR/clusters_%s.root --resegmentedHCal \n'%(current_dir,outfile,seed))
@@ -604,13 +645,13 @@ if __name__=="__main__":
                 os.system("mkdir -p %s"%(ntup_path))
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/clusters_%s.root %s/%s\n'%(seed,ntup_path,outfile))
             frun.write('rm $JOBDIR/clusters_%s.root \n'%(seed))
-            if args.calibrate:
+            if args.calibrate or args.benchmark:
                 ana_path = ntup_path.replace('/ntup', '/ana/')
                 if not ut.dir_exist(ana_path):
                     os.system("mkdir -p %s"%(ana_path))
                 frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/calibrateCluster_histograms.root %s\n'%( ana_path+'/'+outfile ))
                 frun.write('rm $JOBDIR/calibrateCluster_histograms.root \n')
-        if not args.no_eoscopy:
+        if not args.no_eoscopy and not args.recPositions:
             frun.write('python /afs/cern.ch/work/h/helsens/public/FCCutils/eoscopy.py $JOBDIR/%s %s\n'%(outfile,outdir))
             
         frun.write('rm $JOBDIR/%s \n'%(outfile))
