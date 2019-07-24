@@ -4,12 +4,14 @@ import os
 from Gaudi.Configuration import *
 
 
-path_to_detector = os.environ.get("FCC_DETECTOR_XML", "")
+from Configurables import GeoSvc
+geoservice = GeoSvc("GeoSvc")
+# if FCC_DETECTORS is empty, this should use relative path to working directory
+path_to_detector = os.environ.get("FCC_DETECTORS", "")
 detectors_to_use=[
                     'Detector/DetFCChhBaseline1/compact/FCChh_DectMaster.xml',
                   ]
-from Configurables import GeoSvc
-geoservice = GeoSvc("GeoSvc")
+# prefix all xmls with path_to_detector
 geoservice.detectors = [os.path.join(path_to_detector, _det) for _det in detectors_to_use]
 geoservice.OutputLevel = WARNING
 ApplicationMgr().ExtSvc += [geoservice]
